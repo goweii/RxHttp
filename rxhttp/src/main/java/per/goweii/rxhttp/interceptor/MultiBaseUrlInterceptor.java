@@ -12,7 +12,7 @@ import per.goweii.rxhttp.RxHttp;
 import per.goweii.rxhttp.utils.BaseUrlUtils;
 
 /**
- * 描述：多BaseUrl
+ * 描述：多BaseUrl切换
  *
  * @author Cuizhen
  * @date 2018/9/28

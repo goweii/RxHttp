@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
             public Map<String, String> getMultiBaseUrl() {
                 Map<String, String> urls = new HashMap<>(1);
                 urls.put(Config.BASE_URL_OTHER_NAME, Config.BASE_URL_OTHER);
+                urls.put(Config.BASE_URL_ERROR_NAME, Config.BASE_URL_ERROR);
                 return urls;
             }
 

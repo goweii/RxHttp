@@ -5,6 +5,7 @@ import per.goweii.android.rxhttp.bean.RecommendPoetryBean;
 import per.goweii.android.rxhttp.bean.SinglePoetryBean;
 import per.goweii.android.rxhttp.bean.WeatherBean;
 import per.goweii.rxhttp.RxHttp;
+import per.goweii.rxhttp.base.BaseBean;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.Query;
@@ -35,4 +36,11 @@ public interface Api {
     @Headers({RxHttp.MULTI_BASE_URL_NAME + ":" + Config.BASE_URL_OTHER_NAME})
     @GET("weatherApi?")
     Observable<ResponseBean<WeatherBean>> weather(@Query("city") String city);
+
+    /**
+     * 错误地址
+     */
+    @Headers({RxHttp.MULTI_BASE_URL_NAME + ":" + Config.BASE_URL_ERROR_NAME})
+    @GET("weatherApi?")
+    Observable<ResponseBean<BaseBean>> errorHost();
 }
