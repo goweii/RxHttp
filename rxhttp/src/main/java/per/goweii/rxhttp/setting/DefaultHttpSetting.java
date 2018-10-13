@@ -1,6 +1,7 @@
 package per.goweii.rxhttp.setting;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.Map;
 
@@ -11,6 +12,12 @@ import java.util.Map;
  * @date 2018/7/20
  */
 public abstract class DefaultHttpSetting implements HttpSetting {
+
+    @Nullable
+    @Override
+    public Map<String, String> getMultiBaseUrl() {
+        return null;
+    }
 
     @Override
     public int[] getOtherSuccessCode() {

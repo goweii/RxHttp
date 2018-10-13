@@ -2,8 +2,8 @@ package per.goweii.rxhttp.manager;
 
 import com.google.gson.Gson;
 
-import okhttp3.OkHttpClient;
 import per.goweii.rxhttp.RxHttp;
+import per.goweii.rxhttp.utils.BaseUrlUtils;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -24,7 +24,7 @@ public class RetrofitManager {
                 .addConverterFactory(GsonConverterFactory.create(new Gson()))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(OkHttpManager.getInstance().getClient())
-                .baseUrl(checkBaseUrl())
+                .baseUrl(BaseUrlUtils.checkBaseUrl(RxHttp.getSetting().getBaseUrl()))
                 .build();
     }
 
@@ -45,14 +45,5 @@ public class RetrofitManager {
 
     private Retrofit getRetrofit() {
         return mRetrofit;
-    }
-
-    private String checkBaseUrl() {
-        String url = RxHttp.getSetting().getBaseUrl();
-        if (url.endsWith("/")) {
-            return url;
-        } else {
-            return url + "/";
-        }
     }
 }

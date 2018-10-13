@@ -1,4 +1,4 @@
-package per.goweii.android.rxhttp;
+package per.goweii.android.rxhttp.http;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -14,9 +14,9 @@ public class ResponseBean<E> implements BaseResponse<E> {
 
     @SerializedName(value = "code")
     private int code;
-    @SerializedName(value = "result")
+    @SerializedName(value = "result", alternate = {"data"})
     private E data;
-    @SerializedName(value = "message")
+    @SerializedName(value = "message", alternate = {"msg"})
     private String message;
 
     @Override

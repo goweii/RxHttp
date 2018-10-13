@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import per.goweii.rxhttp.BuildConfig;
 import per.goweii.rxhttp.RxHttp;
+import per.goweii.rxhttp.interceptor.MultiBaseUrlInterceptor;
 import per.goweii.rxhttp.interceptor.PublicParamsInterceptor;
 
 /**
@@ -48,6 +49,7 @@ class OkHttpManager {
                     .connectTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
                     .readTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
                     .writeTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
+                    .addInterceptor(new MultiBaseUrlInterceptor())
                     .addInterceptor(new PublicParamsInterceptor())
                     .build();
         }

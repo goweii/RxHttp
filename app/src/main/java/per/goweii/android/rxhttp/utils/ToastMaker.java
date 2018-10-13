@@ -1,4 +1,4 @@
-package per.goweii.android.rxhttp;
+package per.goweii.android.rxhttp.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

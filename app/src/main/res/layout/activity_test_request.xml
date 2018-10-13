@@ -10,8 +10,8 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:padding="5dp"
-        android:background="#ffff">
+        android:background="#ffff"
+        android:padding="5dp">
 
         <TextView
             android:id="@+id/tv_log"
@@ -20,22 +20,60 @@
 
     </ScrollView>
 
-    <TextView
-        android:id="@+id/tv_get_singlePoetry"
-        android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:layout_marginTop="5dp"
-        android:background="#ffff"
-        android:gravity="center"
-        android:text="随机单句诗词推荐" />
 
-    <TextView
-        android:id="@+id/tv_get_recommendPoetry"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:layout_marginTop="5dp"
-        android:background="#ffff"
-        android:gravity="center"
-        android:text="随机一首诗词推荐" />
+        android:layout_height="match_parent">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_get_singlePoetry"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_marginTop="5dp"
+                android:background="#ffff"
+                android:gravity="center"
+                android:text="随机单句诗词推荐" />
+
+            <TextView
+                android:id="@+id/tv_get_recommendPoetry"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_marginTop="5dp"
+                android:background="#ffff"
+                android:gravity="center"
+                android:text="随机一首诗词推荐" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="vertical"
+                android:background="#ffff">
+
+                <EditText
+                    android:id="@+id/et_weather_city"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:gravity="center"
+                    android:textSize="14sp"
+                    android:background="#0000"
+                    android:hint="输入获取天气的城市名"/>
+
+                <TextView
+                    android:id="@+id/tv_get_weather"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:gravity="center"
+                    android:text="获取天气" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
 </LinearLayout>
