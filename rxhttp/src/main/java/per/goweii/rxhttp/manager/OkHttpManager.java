@@ -69,7 +69,7 @@ class OkHttpManager {
     }
 
     private void addNetworkInterceptor(OkHttpClient.Builder builder){
-        Interceptor[] interceptors = RxHttp.getSetting().getInterceptors();
+        Interceptor[] interceptors = RxHttp.getSetting().getNetworkInterceptors();
         if (interceptors != null && interceptors.length > 0) {
             for (Interceptor interceptor : interceptors) {
                 builder.addNetworkInterceptor(interceptor);
