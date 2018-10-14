@@ -25,7 +25,7 @@ public class NetUtils {
             if (connectivityManager != null) {
                 NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
                 if (networkInfo != null) {
-                    return networkInfo.isAvailable();
+                    return networkInfo.isConnected();
                 }
             }
         }

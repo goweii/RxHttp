@@ -20,16 +20,15 @@ public class RetrofitManager {
     private final Retrofit mRetrofit;
 
     private RetrofitManager() {
-        mRetrofit = new Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create(new Gson()))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(OkHttpManager.getInstance().getClient())
-                .baseUrl(BaseUrlUtils.checkBaseUrl(RxHttp.getSetting().getBaseUrl()))
-                .build();
+        mRetrofit = createForRequest();
     }
 
     public static <T> T getService(Class<T> clazz) {
-        return RetrofitManager.getInstance().getRetrofit().create(clazz);
+        return RetrofitManager.getInstance().mRetrofit.create(clazz);
+    }
+
+    public static <T> T getServiceForDownload(Class<T> clazz) {
+        return createForDownload().create(clazz);
     }
 
     private static RetrofitManager getInstance() {
@@ -43,7 +42,21 @@ public class RetrofitManager {
         return INSTANCE;
     }
 
-    private Retrofit getRetrofit() {
-        return mRetrofit;
+    private static Retrofit createForRequest(){
+        return new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(new Gson()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .client(OkHttpManager.createForRequest())
+                .baseUrl(BaseUrlUtils.checkBaseUrl(RxHttp.getSetting().getBaseUrl()))
+                .build();
+    }
+
+    private static Retrofit createForDownload(){
+        return new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(new Gson()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .client(OkHttpManager.createForDownload())
+                .baseUrl(BaseUrlUtils.checkBaseUrl(RxHttp.getSetting().getBaseUrl()))
+                .build();
     }
 }

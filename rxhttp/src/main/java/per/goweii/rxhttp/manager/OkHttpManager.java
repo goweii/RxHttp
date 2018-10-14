@@ -2,7 +2,6 @@ package per.goweii.rxhttp.manager;
 
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.Cache;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -19,45 +18,33 @@ import per.goweii.rxhttp.interceptor.PublicQueryParameterInterceptor;
  */
 class OkHttpManager {
 
-    private static OkHttpManager INSTANCE = null;
-    private final Cache mCache;
-    private OkHttpClient mClient;
-
     private OkHttpManager() {
-        mCache = CacheManager.getInstance().getCache();
     }
 
-    static OkHttpManager getInstance() {
-        if (INSTANCE == null) {
-            synchronized (OkHttpManager.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new OkHttpManager();
-                }
-            }
+    static OkHttpClient createForRequest(){
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            builder.addInterceptor(logging);
         }
-        return INSTANCE;
+        builder.cache(CacheManager.getInstance().getCache())
+                .connectTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
+                .readTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
+                .writeTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS);
+        addInterceptor(builder);
+        addNetworkInterceptor(builder);
+        return builder.build();
     }
 
-    OkHttpClient getClient() {
-        if (mClient == null) {
-            OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            if (BuildConfig.DEBUG) {
-                HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-                logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-                builder.addInterceptor(logging);
-            }
-            builder.cache(mCache)
-                    .connectTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
-                    .readTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
-                    .writeTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS);
-            addInterceptor(builder);
-            addNetworkInterceptor(builder);
-            mClient = builder.build();
-        }
-        return mClient;
+    static OkHttpClient createForDownload(){
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        builder.connectTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS);
+//        builder.addInterceptor(new DownloadInterceptor());
+        return builder.build();
     }
 
-    private void addInterceptor(OkHttpClient.Builder builder){
+    private static void addInterceptor(OkHttpClient.Builder builder){
         BaseUrlRedirectInterceptor.addTo(builder);
         PublicQueryParameterInterceptor.addTo(builder);
         Interceptor[] interceptors = RxHttp.getSetting().getInterceptors();
@@ -68,7 +55,7 @@ class OkHttpManager {
         }
     }
 
-    private void addNetworkInterceptor(OkHttpClient.Builder builder){
+    private static void addNetworkInterceptor(OkHttpClient.Builder builder){
         Interceptor[] interceptors = RxHttp.getSetting().getNetworkInterceptors();
         if (interceptors != null && interceptors.length > 0) {
             for (Interceptor interceptor : interceptors) {
