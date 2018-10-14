@@ -7,12 +7,12 @@ import per.goweii.rxhttp.RxHttp;
 import per.goweii.rxhttp.utils.CacheUtils;
 
 /**
- * 描述：缓存帮助类
+ * 缓存
  *
  * @author Cuizhen
  * @date 2018/9/4
  */
-public class CacheManager {
+class CacheManager {
 
     private static CacheManager INSTANCE = null;
     private File cacheFile;

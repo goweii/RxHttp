@@ -10,6 +10,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import per.goweii.rxhttp.base.BaseResponse;
 import per.goweii.rxhttp.exception.ApiException;
+import per.goweii.rxhttp.exception.ExceptionHandle;
 import per.goweii.rxhttp.exception.NetConnectException;
 import per.goweii.rxhttp.utils.NetUtils;
 
@@ -22,7 +23,7 @@ import per.goweii.rxhttp.utils.NetUtils;
 public class RxRequest<T, R extends BaseResponse<T>> {
 
     private final Observable<R> mObservable;
-    private RequestCallback<T> mCallback;
+    private ResultCallback<T> mCallback;
     private RequestListener mListener;
 
     private RxRequest(Observable<R> observable) {
@@ -33,12 +34,12 @@ public class RxRequest<T, R extends BaseResponse<T>> {
         return new RxRequest<>(observable);
     }
 
-    public RxRequest<T, R> listener(RequestListener listener){
+    public RxRequest<T, R> listener(RequestListener listener) {
         mListener = listener;
         return this;
     }
 
-    public Disposable request(@NonNull RequestCallback<T> callback) {
+    public Disposable request(@NonNull ResultCallback<T> callback) {
         mCallback = callback;
         return mObservable.subscribe(new Consumer<BaseResponse<T>>() {
             @Override
@@ -54,20 +55,14 @@ public class RxRequest<T, R extends BaseResponse<T>> {
                 if (e instanceof ApiException) {
                     ApiException apiException = (ApiException) e;
                     mCallback.onFailed(apiException.getCode(), apiException.getMsg());
-                } else if (e instanceof NetConnectException) {
+                } else {
                     if (mListener != null) {
-                        mListener.onNoNet();
-                    }
-                }
-                /*else if (e instanceof SocketTimeoutException){
-                } else if (e instanceof HttpException){
-                } else if (e instanceof ConnectException || e instanceof UnknownHostException){
-                } else if (e instanceof InterruptedIOException){
-                } else if (e instanceof JsonParseException || e instanceof ParseException || e instanceof JSONException){
-                }*/
-                else {
-                    if (mListener != null) {
-                        mListener.onError(e);
+                        ExceptionHandle handle = RxHttp.getSetting().getExceptionHandle();
+                        if (handle == null){
+                            handle = new ExceptionHandle();
+                        }
+                        handle.handle(e);
+                        mListener.onError(handle);
                     }
                 }
                 if (mListener != null) {
@@ -98,7 +93,7 @@ public class RxRequest<T, R extends BaseResponse<T>> {
         if (code == RxHttp.getSetting().getSuccessCode()) {
             return true;
         }
-        int[] codes = RxHttp.getSetting().getOtherSuccessCode();
+        int[] codes = RxHttp.getSetting().getMultiSuccessCode();
         if (codes == null || codes.length == 0) {
             return false;
         }
@@ -110,15 +105,17 @@ public class RxRequest<T, R extends BaseResponse<T>> {
         return false;
     }
 
-    public interface RequestCallback<E> {
+    public interface ResultCallback<E> {
         void onSuccess(int code, E data);
+
         void onFailed(int code, String msg);
     }
 
     public interface RequestListener {
         void onStart();
-        void onNoNet();
-        void onError(Throwable e);
+
+        void onError(ExceptionHandle handle);
+
         void onFinish();
     }
 }

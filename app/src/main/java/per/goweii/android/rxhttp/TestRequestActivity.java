@@ -10,11 +10,12 @@ import android.widget.TextView;
 import per.goweii.android.rxhttp.bean.RecommendPoetryBean;
 import per.goweii.android.rxhttp.bean.SinglePoetryBean;
 import per.goweii.android.rxhttp.bean.WeatherBean;
-import per.goweii.android.rxhttp.http.Api;
+import per.goweii.android.rxhttp.http.FreeApi;
 import per.goweii.rxhttp.RxHttp;
 import per.goweii.rxhttp.RxLife;
 import per.goweii.rxhttp.RxRequest;
 import per.goweii.rxhttp.base.BaseBean;
+import per.goweii.rxhttp.exception.ExceptionHandle;
 
 public class TestRequestActivity extends AppCompatActivity {
     private static final String TAG = "TestRequestActivity";
@@ -63,7 +64,7 @@ public class TestRequestActivity extends AppCompatActivity {
     }
 
     private void getTime() {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(Api.class).singlePoetry()).listener(new RxRequest.RequestListener() {
+        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).singlePoetry()).listener(new RxRequest.RequestListener() {
             @Override
             public void onStart() {
                 log(null);
@@ -71,20 +72,15 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNoNet() {
-                log("onNoNet()");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                log("onError()");
+            public void onError(ExceptionHandle handle) {
+                log("onError(" + handle.getMsg() + ")");
             }
 
             @Override
             public void onFinish() {
                 log("onFinish()");
             }
-        }).request(new RxRequest.RequestCallback<SinglePoetryBean>() {
+        }).request(new RxRequest.ResultCallback<SinglePoetryBean>() {
             @Override
             public void onSuccess(int code, SinglePoetryBean data) {
                 log("onSuccess(code=" + code + ",data=" + data.toFormatJson() + ")");
@@ -98,7 +94,7 @@ public class TestRequestActivity extends AppCompatActivity {
     }
 
     private void getHome() {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(Api.class).recommendPoetry()).listener(new RxRequest.RequestListener() {
+        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).recommendPoetry()).listener(new RxRequest.RequestListener() {
             @Override
             public void onStart() {
                 log(null);
@@ -106,20 +102,15 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNoNet() {
-                log("onNoNet()");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                log("onError()");
+            public void onError(ExceptionHandle handle) {
+                log("onError(" + handle.getMsg() + ")");
             }
 
             @Override
             public void onFinish() {
                 log("onFinish()");
             }
-        }).request(new RxRequest.RequestCallback<RecommendPoetryBean>() {
+        }).request(new RxRequest.ResultCallback<RecommendPoetryBean>() {
             @Override
             public void onSuccess(int code, RecommendPoetryBean data) {
                 log("onSuccess(code=" + code + ",data=" + data.toFormatJson() + ")");
@@ -133,7 +124,7 @@ public class TestRequestActivity extends AppCompatActivity {
     }
 
     private void getWeather(String city) {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(Api.class).weather(city)).listener(new RxRequest.RequestListener() {
+        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).weather(city)).listener(new RxRequest.RequestListener() {
             @Override
             public void onStart() {
                 log(null);
@@ -141,20 +132,15 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNoNet() {
-                log("onNoNet()");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                log("onError()");
+            public void onError(ExceptionHandle handle) {
+                log("onError(" + handle.getMsg() + ")");
             }
 
             @Override
             public void onFinish() {
                 log("onFinish()");
             }
-        }).request(new RxRequest.RequestCallback<WeatherBean>() {
+        }).request(new RxRequest.ResultCallback<WeatherBean>() {
             @Override
             public void onSuccess(int code, WeatherBean data) {
                 log("onSuccess(code=" + code + ",data=" + data.toFormatJson() + ")");
@@ -168,7 +154,7 @@ public class TestRequestActivity extends AppCompatActivity {
     }
 
     private void getErrorHost() {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(Api.class).errorHost()).listener(new RxRequest.RequestListener() {
+        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).errorHost()).listener(new RxRequest.RequestListener() {
             @Override
             public void onStart() {
                 log(null);
@@ -176,20 +162,15 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNoNet() {
-                log("onNoNet()");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                log("onError()");
+            public void onError(ExceptionHandle handle) {
+                log("onError(" + handle.getMsg() + ")");
             }
 
             @Override
             public void onFinish() {
                 log("onFinish()");
             }
-        }).request(new RxRequest.RequestCallback<BaseBean>() {
+        }).request(new RxRequest.ResultCallback<BaseBean>() {
             @Override
             public void onSuccess(int code, BaseBean data) {
                 log("onSuccess(code=" + code + ",data=" + data.toFormatJson() + ")");

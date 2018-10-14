@@ -17,7 +17,7 @@ import per.goweii.rxhttp.manager.RetrofitManager;
 @SuppressLint("StaticFieldLeak")
 public class RxHttp {
 
-    public static final String MULTI_BASE_URL_NAME = "multi_base_url";
+    public static final String BASE_URL_REDIRECT = "base_url_redirect";
 
     private static RxHttp INSTANCE = null;
 

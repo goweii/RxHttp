@@ -1,23 +1,36 @@
 package per.goweii.rxhttp.interceptor;
 
+import android.support.annotation.NonNull;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import per.goweii.rxhttp.RxHttp;
 import per.goweii.rxhttp.utils.BaseUrlUtils;
 
 /**
- * 描述：多BaseUrl切换
+ * BaseUrl重定向
  *
  * @author Cuizhen
- * @date 2018/9/28
+ * @date 2018/10/13
  */
-public class MultiBaseUrlInterceptor implements Interceptor {
+public class BaseUrlRedirectInterceptor implements Interceptor {
+
+    public static void addTo(@NonNull OkHttpClient.Builder builder) {
+        Map<String, String> urls = RxHttp.getSetting().getMultiBaseUrl();
+        if (urls != null && !urls.isEmpty()) {
+            builder.addInterceptor(new BaseUrlRedirectInterceptor());
+        }
+    }
+
+    private BaseUrlRedirectInterceptor() {
+    }
 
     @Override
     public Response intercept(Chain chain) throws IOException {
@@ -26,12 +39,12 @@ public class MultiBaseUrlInterceptor implements Interceptor {
         if (urls == null || urls.isEmpty()) {
             return chain.proceed(original);
         }
-        List<String> urlNames = original.headers(RxHttp.MULTI_BASE_URL_NAME);
+        List<String> urlNames = original.headers(RxHttp.BASE_URL_REDIRECT);
         if (urlNames == null || urlNames.isEmpty()) {
             return chain.proceed(original);
         }
         Request.Builder builder = original.newBuilder();
-        builder.removeHeader(RxHttp.MULTI_BASE_URL_NAME);
+        builder.removeHeader(RxHttp.BASE_URL_REDIRECT);
         String urlName = urlNames.get(0);
         String url = urls.get(urlName);
         if (url == null) {

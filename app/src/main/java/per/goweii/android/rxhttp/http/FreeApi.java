@@ -16,7 +16,7 @@ import retrofit2.http.Query;
  * @author Cuizhen
  * @date 2018/10/13
  */
-public interface Api {
+public interface FreeApi {
 
     /**
      * 随机单句诗词推荐
@@ -33,14 +33,14 @@ public interface Api {
     /**
      * 获取天气
      */
-    @Headers({RxHttp.MULTI_BASE_URL_NAME + ":" + Config.BASE_URL_OTHER_NAME})
+    @Headers({RxHttp.BASE_URL_REDIRECT + ":" + Config.BASE_URL_OTHER_NAME})
     @GET("weatherApi?")
     Observable<ResponseBean<WeatherBean>> weather(@Query("city") String city);
 
     /**
      * 错误地址
      */
-    @Headers({RxHttp.MULTI_BASE_URL_NAME + ":" + Config.BASE_URL_ERROR_NAME})
+    @Headers({RxHttp.BASE_URL_REDIRECT + ":" + Config.BASE_URL_ERROR_NAME})
     @GET("weatherApi?")
     Observable<ResponseBean<BaseBean>> errorHost();
 }

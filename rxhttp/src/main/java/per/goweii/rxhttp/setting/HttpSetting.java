@@ -6,6 +6,9 @@ import android.support.annotation.Nullable;
 
 import java.util.Map;
 
+import okhttp3.Interceptor;
+import per.goweii.rxhttp.exception.ExceptionHandle;
+
 /**
  * 描述：网络请求设置
  *
@@ -20,7 +23,7 @@ public interface HttpSetting {
     /**
      * 用于对不同的请求设置不同的BaseUrl
      * 需要配合Retrofit的@Headers注解使用
-     * 如：@Headers({RxHttp.MULTI_BASE_URL_NAME + ":" + 别名})
+     * 如：@Headers({RxHttp.BASE_URL_REDIRECT + ":" + 别名})
      * @return Map<别名, url>
      */
     @Nullable
@@ -29,12 +32,7 @@ public interface HttpSetting {
     int getSuccessCode();
 
     @Nullable
-    int[] getOtherSuccessCode();
-
-    int getErrorCode();
-
-    @NonNull
-    String getErrorMsg();
+    int[] getMultiSuccessCode();
 
     @IntRange(from = 1)
     long getTimeout();
@@ -47,5 +45,14 @@ public interface HttpSetting {
 
     @Nullable
     Map<String, String> getPublicQueryParameter();
+
+    @Nullable
+    <E extends ExceptionHandle> E getExceptionHandle();
+
+    @Nullable
+    Interceptor[] getInterceptors();
+
+    @Nullable
+    Interceptor[] getNetworkInterceptors();
 
 }

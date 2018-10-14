@@ -5,6 +5,9 @@ import android.support.annotation.Nullable;
 
 import java.util.Map;
 
+import okhttp3.Interceptor;
+import per.goweii.rxhttp.exception.ExceptionHandle;
+
 /**
  * 描述：网络请求设置（默认）
  *
@@ -20,19 +23,13 @@ public abstract class DefaultHttpSetting implements HttpSetting {
     }
 
     @Override
-    public int[] getOtherSuccessCode() {
+    public int getSuccessCode() {
+        return 200;
+    }
+
+    @Override
+    public int[] getMultiSuccessCode() {
         return null;
-    }
-
-    @Override
-    public int getErrorCode() {
-        return 10000001;
-    }
-
-    @NonNull
-    @Override
-    public String getErrorMsg() {
-        return "请求异常，请稍后重试";
     }
 
     @Override
@@ -53,6 +50,24 @@ public abstract class DefaultHttpSetting implements HttpSetting {
 
     @Override
     public Map<String, String> getPublicQueryParameter() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public <E extends ExceptionHandle> E getExceptionHandle() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public Interceptor[] getInterceptors() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public Interceptor[] getNetworkInterceptors() {
         return null;
     }
 }

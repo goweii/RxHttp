@@ -1,7 +1,7 @@
 package per.goweii.rxhttp.exception;
 
 /**
- * 描述：
+ * 描述：网络请求时没有网的异常
  *
  * @author Cuizhen
  * @date 2018/10/12

@@ -3,15 +3,16 @@ package per.goweii.rxhttp.manager;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import per.goweii.rxhttp.BuildConfig;
 import per.goweii.rxhttp.RxHttp;
-import per.goweii.rxhttp.interceptor.MultiBaseUrlInterceptor;
-import per.goweii.rxhttp.interceptor.PublicParamsInterceptor;
+import per.goweii.rxhttp.interceptor.BaseUrlRedirectInterceptor;
+import per.goweii.rxhttp.interceptor.PublicQueryParameterInterceptor;
 
 /**
- * 描述：OkHttp帮助类
+ * OkHttp
  *
  * @author Cuizhen
  * @date 2018/9/4
@@ -45,14 +46,34 @@ class OkHttpManager {
                 logging.setLevel(HttpLoggingInterceptor.Level.BODY);
                 builder.addInterceptor(logging);
             }
-            mClient = builder.cache(mCache)
+            builder.cache(mCache)
                     .connectTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
                     .readTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
-                    .writeTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS)
-                    .addInterceptor(new MultiBaseUrlInterceptor())
-                    .addInterceptor(new PublicParamsInterceptor())
-                    .build();
+                    .writeTimeout(RxHttp.getSetting().getTimeout(), TimeUnit.MILLISECONDS);
+            addInterceptor(builder);
+            addNetworkInterceptor(builder);
+            mClient = builder.build();
         }
         return mClient;
+    }
+
+    private void addInterceptor(OkHttpClient.Builder builder){
+        BaseUrlRedirectInterceptor.addTo(builder);
+        PublicQueryParameterInterceptor.addTo(builder);
+        Interceptor[] interceptors = RxHttp.getSetting().getInterceptors();
+        if (interceptors != null && interceptors.length > 0) {
+            for (Interceptor interceptor : interceptors) {
+                builder.addInterceptor(interceptor);
+            }
+        }
+    }
+
+    private void addNetworkInterceptor(OkHttpClient.Builder builder){
+        Interceptor[] interceptors = RxHttp.getSetting().getInterceptors();
+        if (interceptors != null && interceptors.length > 0) {
+            for (Interceptor interceptor : interceptors) {
+                builder.addNetworkInterceptor(interceptor);
+            }
+        }
     }
 }

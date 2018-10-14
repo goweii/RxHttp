@@ -9,7 +9,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
- * 描述：Retrofit帮助类
+ * Retrofit
  *
  * @author Cuizhen
  * @date 2018/9/4

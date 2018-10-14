@@ -1,7 +1,7 @@
 package per.goweii.rxhttp.exception;
 
 /**
- * 描述：
+ * 描述：服务器请求成功，返回失败码时抛出，方便统一处理
  *
  * @author Cuizhen
  * @date 2018/10/12
