@@ -1,52 +1,104 @@
 package per.goweii.android.rxhttp;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import per.goweii.android.rxhttp.bean.RecommendPoetryBean;
 import per.goweii.android.rxhttp.bean.SinglePoetryBean;
 import per.goweii.android.rxhttp.bean.WeatherBean;
+import per.goweii.android.rxhttp.http.Config;
 import per.goweii.android.rxhttp.http.FreeApi;
-import per.goweii.rxhttp.RxHttp;
-import per.goweii.rxhttp.RxLife;
-import per.goweii.rxhttp.RxRequest;
-import per.goweii.rxhttp.base.BaseBean;
-import per.goweii.rxhttp.exception.ExceptionHandle;
+import per.goweii.rxhttp.core.RxHttp;
+import per.goweii.rxhttp.core.RxLife;
+import per.goweii.rxhttp.request.RxRequest;
+import per.goweii.rxhttp.request.base.BaseBean;
+import per.goweii.rxhttp.request.exception.ExceptionHandle;
+import per.goweii.rxhttp.request.setting.DefaultRequestSetting;
+import per.goweii.rxhttp.request.setting.ParameterGetter;
 
 public class TestRequestActivity extends AppCompatActivity {
     private static final String TAG = "TestRequestActivity";
 
     private RxLife mRxLife;
-    private TextView tv_log;
+    private TextView tvLog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_request);
+        RxHttp.initRequest(new DefaultRequestSetting() {
+            @NonNull
+            @Override
+            public String getBaseUrl() {
+                return Config.BASE_URL;
+            }
+
+            @Nullable
+            @Override
+            public Map<String, String> getMultiBaseUrl() {
+                Map<String, String> urls = new HashMap<>(2);
+                urls.put(Config.BASE_URL_OTHER_NAME, Config.BASE_URL_OTHER);
+                urls.put(Config.BASE_URL_ERROR_NAME, Config.BASE_URL_ERROR);
+                return urls;
+            }
+
+            @Override
+            public int getSuccessCode() {
+                return 200;
+            }
+
+            @Nullable
+            @Override
+            public Map<String, String> getStaticPublicQueryParameter() {
+                Map<String, String> parameters = new HashMap<>(2);
+                parameters.put("system", "android");
+                parameters.put("version_code", "1");
+                parameters.put("device_num", "666");
+                return parameters;
+            }
+
+            @Nullable
+            @Override
+            public Map<String, ParameterGetter> getDynamicPublicQueryParameter() {
+                Map<String, ParameterGetter> parameters = new HashMap<>(2);
+                parameters.put("timestamp", new ParameterGetter() {
+                    @Override
+                    public String get() {
+                        return System.currentTimeMillis() + "";
+                    }
+                });
+                return parameters;
+            }
+        });
         mRxLife = RxLife.create();
 
-        tv_log = findViewById(R.id.tv_log);
+        tvLog = findViewById(R.id.tv_log);
         findViewById(R.id.tv_get_singlePoetry).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getTime();
+                getSinglePoetry();
             }
         });
         findViewById(R.id.tv_get_recommendPoetry).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getHome();
+                getRecommendPoetry();
             }
         });
         findViewById(R.id.tv_get_weather).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText et_weather_city = findViewById(R.id.et_weather_city);
-                getWeather(et_weather_city.getText().toString());
+                EditText etWeatherCity = findViewById(R.id.et_weather_city);
+                getWeather(etWeatherCity.getText().toString());
             }
         });
         findViewById(R.id.tv_http_host_error).setOnClickListener(new View.OnClickListener() {
@@ -63,12 +115,15 @@ public class TestRequestActivity extends AppCompatActivity {
         mRxLife.destroy();
     }
 
-    private void getTime() {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).singlePoetry()).listener(new RxRequest.RequestListener() {
+    private void getSinglePoetry() {
+        mRxLife.add(RxRequest.create(FreeApi.api().singlePoetry()).listener(new RxRequest.RequestListener() {
+            private long timeStart = 0;
+
             @Override
             public void onStart() {
                 log(null);
                 log("onStart()");
+                timeStart = System.currentTimeMillis();
             }
 
             @Override
@@ -78,7 +133,8 @@ public class TestRequestActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                log("onFinish()");
+                long cast = System.currentTimeMillis() - timeStart;
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<SinglePoetryBean>() {
             @Override
@@ -93,12 +149,15 @@ public class TestRequestActivity extends AppCompatActivity {
         }));
     }
 
-    private void getHome() {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).recommendPoetry()).listener(new RxRequest.RequestListener() {
+    private void getRecommendPoetry() {
+        mRxLife.add(RxRequest.create(FreeApi.api().recommendPoetry()).listener(new RxRequest.RequestListener() {
+            private long timeStart = 0;
+
             @Override
             public void onStart() {
                 log(null);
                 log("onStart()");
+                timeStart = System.currentTimeMillis();
             }
 
             @Override
@@ -108,7 +167,8 @@ public class TestRequestActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                log("onFinish()");
+                long cast = System.currentTimeMillis() - timeStart;
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<RecommendPoetryBean>() {
             @Override
@@ -124,11 +184,14 @@ public class TestRequestActivity extends AppCompatActivity {
     }
 
     private void getWeather(String city) {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).weather(city)).listener(new RxRequest.RequestListener() {
+        mRxLife.add(RxRequest.create(FreeApi.api().weather(city)).listener(new RxRequest.RequestListener() {
+            private long timeStart = 0;
+
             @Override
             public void onStart() {
                 log(null);
                 log("onStart()");
+                timeStart = System.currentTimeMillis();
             }
 
             @Override
@@ -138,7 +201,8 @@ public class TestRequestActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                log("onFinish()");
+                long cast = System.currentTimeMillis() - timeStart;
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<WeatherBean>() {
             @Override
@@ -154,11 +218,14 @@ public class TestRequestActivity extends AppCompatActivity {
     }
 
     private void getErrorHost() {
-        mRxLife.add(RxRequest.create(RxHttp.getApi(FreeApi.class).errorHost()).listener(new RxRequest.RequestListener() {
+        mRxLife.add(RxRequest.create(FreeApi.api().errorHost()).listener(new RxRequest.RequestListener() {
+            private long timeStart = 0;
+
             @Override
             public void onStart() {
                 log(null);
                 log("onStart()");
+                timeStart = System.currentTimeMillis();
             }
 
             @Override
@@ -168,7 +235,8 @@ public class TestRequestActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                log("onFinish()");
+                long cast = System.currentTimeMillis() - timeStart;
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<BaseBean>() {
             @Override
@@ -185,10 +253,10 @@ public class TestRequestActivity extends AppCompatActivity {
 
     private void log(String text){
         if (text == null) {
-            tv_log.setText("");
+            tvLog.setText("");
         } else {
             Log.d(TAG, text);
-            tv_log.setText(tv_log.getText().toString() + "\n" + text);
+            tvLog.setText(tvLog.getText().toString() + "\n" + text);
         }
     }
 }

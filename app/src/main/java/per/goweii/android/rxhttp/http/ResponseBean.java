@@ -2,7 +2,7 @@ package per.goweii.android.rxhttp.http;
 
 import com.google.gson.annotations.SerializedName;
 
-import per.goweii.rxhttp.base.BaseResponse;
+import per.goweii.rxhttp.request.base.BaseResponse;
 
 /**
  * 描述：

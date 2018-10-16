@@ -12,6 +12,14 @@
         android:layout_height="45dp"
         android:gravity="center"
         android:background="#ffff"
-        android:text="跳转测试网络请求" />
+        android:text="测试请求" />
+
+    <TextView
+        android:id="@+id/tv_go_test_download"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:gravity="center"
+        android:background="#ffff"
+        android:text="测试下载" />
 
 </LinearLayout>

@@ -1,6 +1,6 @@
 package per.goweii.android.rxhttp.bean;
 
-import per.goweii.rxhttp.base.BaseBean;
+import per.goweii.rxhttp.request.base.BaseBean;
 
 /**
  * 描述：
