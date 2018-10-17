@@ -4,9 +4,13 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import io.reactivex.Observable;
 import per.goweii.rxhttp.core.exception.RxHttpUninitializedException;
+import per.goweii.rxhttp.download.RxDownload;
 import per.goweii.rxhttp.download.exception.NullDownloadSettingException;
 import per.goweii.rxhttp.download.setting.DownloadSetting;
+import per.goweii.rxhttp.request.RxRequest;
+import per.goweii.rxhttp.request.base.BaseResponse;
 import per.goweii.rxhttp.request.exception.NullRequestSettingException;
 import per.goweii.rxhttp.request.setting.RequestSetting;
 
@@ -48,6 +52,7 @@ public class RxHttp {
         getInstance().mDownloadSetting = setting;
     }
 
+    @NonNull
     public static Context getAppContext() {
         return getInstance().mAppContext;
     }
@@ -68,5 +73,13 @@ public class RxHttp {
             throw new NullDownloadSettingException();
         }
         return setting;
+    }
+
+    public static <T, R extends BaseResponse<T>> RxRequest<T, R> request(@NonNull Observable<R> observable) {
+        return RxRequest.create(observable);
+    }
+
+    public static RxDownload download(@NonNull String url) {
+        return RxDownload.create(url);
     }
 }
