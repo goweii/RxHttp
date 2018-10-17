@@ -86,8 +86,9 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                         checkSaveFilePath(mDownloadInfo);
                         File file = createSaveFile(mDownloadInfo);
                         if (mDownloadInfo.downloadLength != file.length()) {
-                            file.delete();
-                            file = createSaveFile(mDownloadInfo);
+                            if (file.delete()) {
+                                file = createSaveFile(mDownloadInfo);
+                            }
                         }
                         mDownloadInfo.state = DownloadInfo.State.DOWNLOADING;
                         notifyDownloading();

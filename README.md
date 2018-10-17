@@ -1,6 +1,8 @@
 # RxHttp
 
-对RxJava2+Retrofit2+Okhttp的封装
+对RxJava2+Retrofit2+Okhttp的封装，优雅实现接口请求和文件下载
+
+
 
 # 功能简介
 
@@ -11,7 +13,11 @@
   - 支持添加公共请求参数
   - 支持自定义异常处理和异常提示消息
 - 文件下载（RxDownload）
-  - 暂未完成
+  - 支持断点续传
+  - 支持下载进度回调
+  - 支持下载速度回调
+
+
 
 # 集成方式
 
@@ -34,9 +40,11 @@
 
    ```java
    dependencies {
-   	implementation 'com.github.goweii:RxHttp:v1.0.0'
+   	implementation 'com.github.goweii:RxHttp:最新版本号'
    }
    ```
+
+
 
 # RxRequest
 
@@ -252,4 +260,89 @@ RxRequest的设置
 
 # RxDownload
 
-暂未实现
+## 使用方法
+
+### 初始化
+
+初始化操作可在Application中也可在应用启动页中进行
+
+```java
+RxHttp.init(this);
+RxHttp.initDownload(new DefaultDownloadSetting() {
+            @Override
+            public long getTimeout() {
+                return 60000;
+            }
+        });
+```
+
+### 调用方式
+
+```java
+RxDownload mRxDownload = RxDownload.create(et_url.getText().toString())
+        .setDownloadListener(new RxDownload.DownloadListener() {
+            @Override
+            public void onStarting() {
+                tv_start.setText("正在开始...");
+            }
+
+            @Override
+            public void onDownloading() {
+                tv_start.setText("正在下载");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                tv_start.setText("下载失败");
+            }
+
+            @Override
+            public void onStopped() {
+                tv_start.setText("已停止");
+            }
+
+            @Override
+            public void onCanceled() {
+                tv_start.setText("已取消");
+                pb_1.setProgress(0);
+            }
+
+            @Override
+            public void onCompletion(DownloadInfo info) {
+                tv_start.setText("下载成功");
+            }
+        })
+        .setProgressListener(new RxDownload.ProgressListener() {
+            @Override
+            public void onProgress(float progress) {
+                pb_1.setProgress((int) (progress * 100));
+            }
+        })
+        .setSpeedListener(new RxDownload.SpeedListener() {
+            @Override
+            public void onSpeedChange(float bytePerSecond, String speedFormat) {
+                tv_start.setText("正在下载(" + speedFormat + ")");
+            }
+        });
+
+tv_start.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        mRxDownload.start();
+    }
+});
+
+tv_stop.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        mRxDownload.stop();
+    }
+});
+
+tv_cancel.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        mRxDownload.cancel();
+    }
+});
+```
