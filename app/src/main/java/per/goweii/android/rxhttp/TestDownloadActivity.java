@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.download.RxDownload;
+import per.goweii.rxhttp.download.base.DownloadInfo;
 import per.goweii.rxhttp.download.setting.DefaultDownloadSetting;
 
 public class TestDownloadActivity extends AppCompatActivity {
@@ -66,15 +67,15 @@ public class TestDownloadActivity extends AppCompatActivity {
         });
 
         mRxDownload = RxDownload.create(et_url.getText().toString())
-                .listener(new RxDownload.DownloadListener() {
+                .setDownloadListener(new RxDownload.DownloadListener() {
                     @Override
-                    public void onStart() {
-                        tv_start.setText("正在下载...");
+                    public void onStarting() {
+                        tv_start.setText("正在开始...");
                     }
 
                     @Override
-                    public void onProgress(float progress) {
-                        pb_1.setProgress((int) (progress * 100));
+                    public void onDownloading() {
+                        tv_start.setText("正在下载");
                     }
 
                     @Override
@@ -83,8 +84,31 @@ public class TestDownloadActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFinish() {
+                    public void onStopped() {
+                        tv_start.setText("已停止");
+                    }
+
+                    @Override
+                    public void onCanceled() {
+                        tv_start.setText("已取消");
+                        pb_1.setProgress(0);
+                    }
+
+                    @Override
+                    public void onCompletion(DownloadInfo info) {
                         tv_start.setText("下载成功");
+                    }
+                })
+                .setProgressListener(new RxDownload.ProgressListener() {
+                    @Override
+                    public void onProgress(float progress) {
+                        pb_1.setProgress((int) (progress * 100));
+                    }
+                })
+                .setSpeedListener(new RxDownload.SpeedListener() {
+                    @Override
+                    public void onSpeedChange(float bytePerSecond, String speedFormat) {
+                        tv_start.setText("正在下载(" + speedFormat + ")");
                     }
                 });
     }

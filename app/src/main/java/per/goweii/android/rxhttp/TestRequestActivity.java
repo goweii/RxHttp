@@ -128,7 +128,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onFinish(cast=" + cast + ")");
+                log("onStopped(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<SinglePoetryBean>() {
             @Override
@@ -162,7 +162,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onFinish(cast=" + cast + ")");
+                log("onStopped(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<RecommendPoetryBean>() {
             @Override
@@ -196,7 +196,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onFinish(cast=" + cast + ")");
+                log("onStopped(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<WeatherBean>() {
             @Override
@@ -230,7 +230,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onFinish(cast=" + cast + ")");
+                log("onStopped(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<BaseBean>() {
             @Override

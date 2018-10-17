@@ -173,9 +173,9 @@ private void getTime() {
         private long timeStart = 0;
 
         @Override
-        public void onStart() {
+        public void onDownloading() {
             log(null);
-            log("onStart()");
+            log("onDownloading()");
             timeStart = System.currentTimeMillis();
         }
 
@@ -185,9 +185,9 @@ private void getTime() {
         }
 
         @Override
-        public void onFinish() {
+        public void onStopped() {
             long cast = System.currentTimeMillis() - timeStart;
-            log("onFinish(cast=" + cast + ")");
+            log("onStopped(cast=" + cast + ")");
         }
     }).request(new RxRequest.ResultCallback<TimeBean>() {
         @Override
@@ -233,9 +233,9 @@ RxRequest的设置
 
 - create(Observable<R>)：创建实例，传入参数为一个可观察对象，应该为Api接口返回
 - listener(RequestListener)：监听请求的生命周期
-  - onStart()：请求开始
+  - onDownloading()：请求开始
   - onError(ExceptionHandle)：请求出错，请见ExceptionHandle
-  - onFinish()：请求结束
+  - onStopped()：请求结束
 - request(ResultCallback<E>)：请求成功
   - onSuccess(int, E)：服务器返回成功code
   - onFailed(int, String)：服务器返回失败code

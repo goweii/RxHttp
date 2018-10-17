@@ -1,12 +1,12 @@
 package per.goweii.rxhttp.download.interceptor;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.io.IOException;
 
 import okhttp3.Interceptor;
 import okhttp3.Response;
-import per.goweii.rxhttp.download.listener.RealNameListener;
 
 /**
  * @author CuiZhen
@@ -17,9 +17,9 @@ import per.goweii.rxhttp.download.listener.RealNameListener;
  */
 public class RealNameInterceptor implements Interceptor {
 
-    private RealNameListener mListener;
+    private RealNameCallback mListener;
 
-    public RealNameInterceptor(RealNameListener listener) {
+    public RealNameInterceptor(RealNameCallback listener) {
         this.mListener = listener;
     }
 
@@ -28,7 +28,9 @@ public class RealNameInterceptor implements Interceptor {
         Response response = chain.proceed(chain.request());
         if (mListener != null){
             String realName = getHeaderFileName(response);
-            mListener.getRealName(realName);
+            if (!TextUtils.isEmpty(realName)) {
+                mListener.onRealName(realName);
+            }
         }
         return response;
     }
@@ -53,5 +55,9 @@ public class RealNameInterceptor implements Interceptor {
             }
         }
         return realName;
+    }
+
+    public interface RealNameCallback{
+        void onRealName(@NonNull String realName);
     }
 }

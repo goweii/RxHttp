@@ -14,8 +14,26 @@ public class DownloadInfo {
     public String saveFileName;
     public long downloadLength;
     public long contentLength;
-    public float speed;
     public State state;
+
+    private DownloadInfo(String url, String saveDirName, String saveFileName, long downloadLength) {
+        this.url = url;
+        this.saveDirName = saveDirName;
+        this.saveFileName = saveFileName;
+        this.downloadLength = downloadLength;
+    }
+
+    public static DownloadInfo create(String url){
+        return create(url, null, null);
+    }
+
+    public static DownloadInfo create(String url, String saveDirName, String saveFileName){
+        return create(url, saveDirName, saveFileName, 0);
+    }
+
+    public static DownloadInfo create(String url, String saveDirName, String saveFileName, long downloadLength){
+        return new DownloadInfo(url, saveDirName, saveFileName, downloadLength);
+    }
 
     public enum State{
         /**
@@ -27,10 +45,6 @@ public class DownloadInfo {
          */
         DOWNLOADING,
         /**
-         * 正在停止
-         */
-        STOPPING,
-        /**
          * 已停止
          */
         STOPPED,
@@ -41,6 +55,6 @@ public class DownloadInfo {
         /**
          * 下载完成
          */
-        FINISH
+        COMPLETION
     }
 }

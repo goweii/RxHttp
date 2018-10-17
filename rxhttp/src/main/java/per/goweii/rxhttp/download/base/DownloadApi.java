@@ -13,7 +13,7 @@ import retrofit2.http.Url;
  * E-mail: goweii@163.com
  * GitHub: https://github.com/goweii
  */
-public interface DownloadApi {
+public interface DownloadApi{
     @Streaming
     @GET
     Observable<ResponseBody> download(@Url String url);
