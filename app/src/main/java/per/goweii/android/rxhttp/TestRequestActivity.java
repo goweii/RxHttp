@@ -1,8 +1,6 @@
 package per.goweii.android.rxhttp;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -36,13 +34,11 @@ public class TestRequestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_request);
         RxHttp.initRequest(new DefaultRequestSetting() {
-            @NonNull
             @Override
             public String getBaseUrl() {
                 return Config.BASE_URL;
             }
 
-            @Nullable
             @Override
             public Map<String, String> getMultiBaseUrl() {
                 Map<String, String> urls = new HashMap<>(2);
@@ -56,7 +52,6 @@ public class TestRequestActivity extends AppCompatActivity {
                 return 200;
             }
 
-            @Nullable
             @Override
             public Map<String, String> getStaticPublicQueryParameter() {
                 Map<String, String> parameters = new HashMap<>(2);
@@ -66,14 +61,13 @@ public class TestRequestActivity extends AppCompatActivity {
                 return parameters;
             }
 
-            @Nullable
             @Override
             public Map<String, ParameterGetter> getDynamicPublicQueryParameter() {
                 Map<String, ParameterGetter> parameters = new HashMap<>(2);
-                parameters.put("timestamp", new ParameterGetter() {
+                parameters.put("user_id", new ParameterGetter() {
                     @Override
                     public String get() {
-                        return System.currentTimeMillis() + "";
+                        return "100001";
                     }
                 });
                 return parameters;

@@ -13,6 +13,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.core.utils.BaseUrlUtils;
+import per.goweii.rxhttp.request.Api;
 import per.goweii.rxhttp.request.utils.NonNullUtils;
 
 /**
@@ -40,12 +41,12 @@ public class BaseUrlRedirectInterceptor implements Interceptor {
         if (!NonNullUtils.check(urls)) {
             return chain.proceed(original);
         }
-        List<String> urlNames = original.headers(RxHttp.BASE_URL_REDIRECT);
+        List<String> urlNames = original.headers(Api.Header.BASE_URL_REDIRECT);
         if (!NonNullUtils.check(urlNames)) {
             return chain.proceed(original);
         }
         Request.Builder builder = original.newBuilder();
-        builder.removeHeader(RxHttp.BASE_URL_REDIRECT);
+        builder.removeHeader(Api.Header.BASE_URL_REDIRECT);
         String urlName = urlNames.get(0);
         String url = urls.get(urlName);
         if (url == null) {

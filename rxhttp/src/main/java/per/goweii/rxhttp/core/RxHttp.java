@@ -19,8 +19,6 @@ import per.goweii.rxhttp.request.setting.RequestSetting;
 @SuppressLint("StaticFieldLeak")
 public class RxHttp {
 
-    public static final String BASE_URL_REDIRECT = "Base-Url-Redirect";
-
     private static RxHttp INSTANCE = null;
 
     private final Context mAppContext;

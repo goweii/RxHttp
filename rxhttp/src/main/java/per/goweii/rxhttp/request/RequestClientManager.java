@@ -12,10 +12,11 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import per.goweii.rxhttp.BuildConfig;
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.core.manager.BaseClientManager;
-import per.goweii.rxhttp.request.interceptor.BaseUrlRedirectInterceptor;
-import per.goweii.rxhttp.request.interceptor.PublicQueryParameterInterceptor;
 import per.goweii.rxhttp.core.utils.BaseUrlUtils;
 import per.goweii.rxhttp.core.utils.SDCardUtils;
+import per.goweii.rxhttp.request.interceptor.BaseUrlRedirectInterceptor;
+import per.goweii.rxhttp.request.interceptor.CacheControlInterceptor;
+import per.goweii.rxhttp.request.interceptor.PublicQueryParameterInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -73,6 +74,7 @@ class RequestClientManager extends BaseClientManager {
                 .writeTimeout(RxHttp.getRequestSetting().getTimeout(), TimeUnit.MILLISECONDS);
         BaseUrlRedirectInterceptor.addTo(builder);
         PublicQueryParameterInterceptor.addTo(builder);
+        CacheControlInterceptor.addTo(builder);
         Interceptor[] interceptors = RxHttp.getRequestSetting().getInterceptors();
         if (interceptors != null && interceptors.length > 0) {
             for (Interceptor interceptor : interceptors) {

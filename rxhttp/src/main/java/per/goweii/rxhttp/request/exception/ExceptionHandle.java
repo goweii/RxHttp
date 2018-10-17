@@ -11,10 +11,13 @@ import java.text.ParseException;
 
 import javax.net.ssl.SSLException;
 
+import per.goweii.rxhttp.request.setting.RequestSetting;
+import per.goweii.rxhttp.request.utils.NetUtils;
 import retrofit2.HttpException;
 
 /**
- * 集中处理请求中异常
+ * 集中处理请求中异常，可通过继承自定义，在
+ * {@link RequestSetting#getExceptionHandle()}中返回
  *
  * @author CuiZhen
  * @date 2018/10/14
@@ -24,55 +27,95 @@ import retrofit2.HttpException;
  */
 public class ExceptionHandle {
 
+    private Throwable e;
     private int code;
     private String msg;
-    private Throwable e;
 
-    public void handle(Throwable e){
-        if (e instanceof NetConnectException) {
-            set(Code.NO_NET, "网络连接失败，请检查网络设置", e);
-        } else if (e instanceof SocketTimeoutException) {
-            set(Code.TIMEOUT, "请求超时", e);
-        } else if (e instanceof HttpException) {
-            set(Code.API, "请求错误", e);
-        } else if (e instanceof ConnectException
-                || e instanceof UnknownHostException) {
-            set(Code.UNKNOWN, "服务器连接失败，请检查网络设置", e);
-        } else if (e instanceof JsonParseException
-                || e instanceof ParseException
-                || e instanceof JSONException) {
-            set(Code.JSON_PARSE, "JSON解析异常", e);
-        } else if (e instanceof SSLException) {
-            set(Code.SSL, "证书验证失败", e);
+    public final void handle(Throwable e) {
+        this.e = e;
+        this.code = onGetCode(e);
+        this.msg = onGetMsg(code);
+    }
+
+    /**
+     * 重写该方法去返回异常对应的错误码
+     *
+     * @param e Throwable
+     * @return 错误码
+     */
+    protected int onGetCode(Throwable e) {
+        if (!NetUtils.isConnected()) {
+            return Code.NET;
         } else {
-            set(Code.UNKNOWN, "未知错误，请稍后重试", e);
+            if (e instanceof SocketTimeoutException) {
+                return Code.TIMEOUT;
+            } else if (e instanceof HttpException) {
+                return Code.HTTP;
+            } else if (e instanceof UnknownHostException || e instanceof ConnectException) {
+                return Code.HOST;
+            } else if (e instanceof JsonParseException || e instanceof ParseException || e instanceof JSONException) {
+                return Code.JSON;
+            } else if (e instanceof SSLException) {
+                return Code.SSL;
+            } else {
+                return Code.UNKNOWN;
+            }
         }
     }
 
-    protected void set(int code, String msg, Throwable e){
-        this.e = e;
-        this.code = code;
-        this.msg = msg;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMsg() {
+    /**
+     * 重写该方法去返回错误码对应的错误信息
+     *
+     * @param code 错误码
+     * @return 错误信息
+     */
+    protected String onGetMsg(int code) {
+        String msg;
+        switch (code) {
+            default:
+                msg = "未知错误，请稍后重试";
+                break;
+            case Code.NET:
+                msg = "网络连接失败，请检查网络设置";
+                break;
+            case Code.TIMEOUT:
+                msg = "网络状况不稳定，请稍后重试";
+                break;
+            case Code.JSON:
+                msg = "JSON解析异常";
+                break;
+            case Code.HTTP:
+                msg = "请求错误，请稍后重试";
+                break;
+            case Code.HOST:
+                msg = "服务器连接失败，请检查网络设置";
+                break;
+            case Code.SSL:
+                msg = "证书验证失败";
+                break;
+        }
         return msg;
     }
 
-    public Throwable getException() {
+    public final int getCode() {
+        return code;
+    }
+
+    public final String getMsg() {
+        return msg;
+    }
+
+    public final Throwable getException() {
         return e;
     }
 
-    public interface Code{
+    public interface Code {
         int UNKNOWN = -1;
-        int NO_NET = 0;
+        int NET = 0;
         int TIMEOUT = 1;
-        int JSON_PARSE = 2;
-        int API = 3;
-        int SSL = 4;
+        int JSON = 2;
+        int HTTP = 3;
+        int HOST = 4;
+        int SSL = 5;
     }
 }

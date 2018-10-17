@@ -12,8 +12,6 @@ import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.request.base.BaseResponse;
 import per.goweii.rxhttp.request.exception.ApiException;
 import per.goweii.rxhttp.request.exception.ExceptionHandle;
-import per.goweii.rxhttp.request.exception.NetConnectException;
-import per.goweii.rxhttp.request.utils.NetUtils;
 
 /**
  * 描述：网络请求
@@ -82,9 +80,6 @@ public class RxRequest<T, R extends BaseResponse<T>> {
             public void accept(Disposable d) throws Exception {
                 if (mListener != null) {
                     mListener.onStart();
-                }
-                if (!NetUtils.isConnected()) {
-                    throw new NetConnectException();
                 }
             }
         });
