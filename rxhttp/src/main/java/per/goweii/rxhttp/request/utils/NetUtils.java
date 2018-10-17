@@ -16,17 +16,13 @@ public class NetUtils {
 
     /**
      * 判断是否有网络
-     *
-     * @return 返回值
      */
     public static boolean isConnected() {
-        if (RxHttp.getAppContext() != null) {
-            ConnectivityManager connectivityManager = (ConnectivityManager) RxHttp.getAppContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connectivityManager != null) {
-                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-                if (networkInfo != null) {
-                    return networkInfo.isConnected();
-                }
+        ConnectivityManager connectivityManager = (ConnectivityManager) RxHttp.getAppContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+            if (networkInfo != null) {
+                return networkInfo.isConnected();
             }
         }
         return false;

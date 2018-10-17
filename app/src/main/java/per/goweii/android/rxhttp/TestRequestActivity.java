@@ -110,7 +110,7 @@ public class TestRequestActivity extends AppCompatActivity {
     }
 
     private void getSinglePoetry() {
-        mRxLife.add(RxRequest.create(FreeApi.api().singlePoetry()).listener(new RxRequest.RequestListener() {
+        mRxLife.add(RxHttp.request(FreeApi.api().singlePoetry()).listener(new RxRequest.RequestListener() {
             private long timeStart = 0;
 
             @Override
