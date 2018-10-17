@@ -1,7 +1,7 @@
 package per.goweii.rxhttp.download;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.io.File;
@@ -34,12 +34,12 @@ import per.goweii.rxhttp.download.interceptor.RealNameInterceptor;
  */
 public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
+    private final DownloadInfo mDownloadInfo;
     private DownloadListener mDownloadListener = null;
     private ProgressListener mProgressListener = null;
     private SpeedListener mSpeedListener = null;
     private Disposable mDisposableDownload = null;
-    private final DownloadInfo mDownloadInfo;
-    private Disposable mDisposableSpeed;
+    private Disposable mDisposableSpeed = null;
 
     private RxDownload(DownloadInfo downloadInfo) {
         mDownloadInfo = downloadInfo;
@@ -49,11 +49,11 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         return new RxDownload(DownloadInfo.create(url));
     }
 
-    public static RxDownload create(String url, String saveDirName, String saveFileName){
+    public static RxDownload create(@NonNull String url, String saveDirName, String saveFileName) {
         return new RxDownload(DownloadInfo.create(url, saveDirName, saveFileName));
     }
 
-    public static RxDownload create(String url, String saveDirName, String saveFileName, long downloadLength){
+    public static RxDownload create(@NonNull String url, String saveDirName, String saveFileName, @IntRange(from = 0) long downloadLength) {
         return new RxDownload(DownloadInfo.create(url, saveDirName, saveFileName, downloadLength));
     }
 
@@ -90,29 +90,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                             file = createSaveFile(mDownloadInfo);
                         }
                         mDownloadInfo.state = DownloadInfo.State.DOWNLOADING;
-                        Observable.empty()
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(new Observer<Object>() {
-                                    @Override
-                                    public void onSubscribe(Disposable d) {
-                                    }
-
-                                    @Override
-                                    public void onNext(Object o) {
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable e) {
-                                    }
-
-                                    @Override
-                                    public void onComplete() {
-                                        if (mDownloadListener != null) {
-                                            mDownloadListener.onDownloading();
-                                        }
-                                    }
-                                });
+                        notifyDownloading();
                         createSpeedObserver();
                         write(responseBody.byteStream(), file);
                     }
@@ -237,20 +215,18 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         }
     }
 
-    private void notifyProgress() {
-        if (mProgressListener != null) {
-            float progress = (float) mDownloadInfo.downloadLength / (float) mDownloadInfo.contentLength;
-            Observable.just(progress)
+    private void notifyDownloading() {
+        if (mDownloadListener != null) {
+            Observable.empty()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Float>() {
+                    .subscribe(new Observer<Object>() {
                         @Override
                         public void onSubscribe(Disposable d) {
                         }
 
                         @Override
-                        public void onNext(Float progress) {
-                            mProgressListener.onProgress(progress);
+                        public void onNext(Object o) {
                         }
 
                         @Override
@@ -259,6 +235,34 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
                         @Override
                         public void onComplete() {
+                            mDownloadListener.onDownloading();
+                        }
+                    });
+        }
+    }
+
+    private void notifyProgress() {
+        if (mProgressListener != null) {
+            Observable.empty()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<Object>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                        }
+
+                        @Override
+                        public void onNext(Object o) {
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            float progress = (float) mDownloadInfo.downloadLength / (float) mDownloadInfo.contentLength;
+                            mProgressListener.onProgress(progress);
                         }
                     });
         }
@@ -292,18 +296,18 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                 });
     }
 
-    private String formatSpeed(float bytePerSecond){
+    private String formatSpeed(float bytePerSecond) {
         float speed;
         String unit;
-        if (bytePerSecond < 1024){
+        if (bytePerSecond < 1024) {
             // 0B~1KB
             unit = "B";
             speed = bytePerSecond;
-        } else if (bytePerSecond < 1024 * 1024){
+        } else if (bytePerSecond < 1024 * 1024) {
             // 1KB~1MB
             unit = "KB";
             speed = bytePerSecond / (1024);
-        } else{
+        } else {
             // 1MB~
             unit = "MB";
             speed = bytePerSecond / (1024 * 1024);
