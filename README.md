@@ -42,7 +42,7 @@
 
    ```java
    dependencies {
-   	implementation 'com.github.goweii:RxHttp:最新版本号'
+   	api 'com.github.goweii:RxHttp:最新版本号'
    }
    ```
 

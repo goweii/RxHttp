@@ -101,7 +101,7 @@ public class TestDownloadActivity extends AppCompatActivity {
                 })
                 .setProgressListener(new RxDownload.ProgressListener() {
                     @Override
-                    public void onProgress(float progress) {
+                    public void onProgress(float progress, long downloadLength, long contentLength) {
                         pb_1.setProgress((int) (progress * 100));
                     }
                 })

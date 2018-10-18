@@ -267,7 +267,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                         @Override
                         public void onComplete() {
                             float progress = (float) mInfo.downloadLength / (float) mInfo.contentLength;
-                            mProgressListener.onProgress(progress);
+                            mProgressListener.onProgress(progress, mInfo.downloadLength, mInfo.contentLength);
                         }
                     });
         }
@@ -327,7 +327,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
     }
 
     public interface ProgressListener {
-        void onProgress(float progress);
+        void onProgress(float progress, long downloadLength, long contentLength);
     }
 
     public interface SpeedListener {
