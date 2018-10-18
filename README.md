@@ -2,6 +2,10 @@
 
 对RxJava2+Retrofit2+Okhttp的封装，优雅实现接口请求和文件下载
 
+[GitHub主页](https://github.com/goweii/RxHttp)
+
+[Demo下载](https://github.com/goweii/RxHttp/raw/master/app/release/app-release.apk)
+
 
 
 # 功能简介
