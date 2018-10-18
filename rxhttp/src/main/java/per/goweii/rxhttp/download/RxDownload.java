@@ -26,7 +26,7 @@ import per.goweii.rxhttp.download.exception.SaveFileBrokenPointException;
 import per.goweii.rxhttp.download.exception.SaveFileDirMakeException;
 import per.goweii.rxhttp.download.exception.SaveFileWriteException;
 import per.goweii.rxhttp.download.interceptor.RealNameInterceptor;
-import per.goweii.rxhttp.download.utils.SpeedUtils;
+import per.goweii.rxhttp.download.utils.UnitFormatUtils;
 
 /**
  * 描述：网络请求
@@ -284,7 +284,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
                     @Override
                     public Float apply(Long ms) throws Exception {
-                        float bytesPerSecond = SpeedUtils.calculateSpeed(mInfo.downloadLength - lastDownloadLength, 1);
+                        float bytesPerSecond = UnitFormatUtils.calculateSpeed(mInfo.downloadLength - lastDownloadLength, 1);
                         lastDownloadLength = mInfo.downloadLength;
                         return bytesPerSecond;
                     }
@@ -294,7 +294,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                     @Override
                     public void accept(Float speedPerSecond) throws Exception {
                         if (mSpeedListener != null) {
-                            mSpeedListener.onSpeedChange(speedPerSecond, SpeedUtils.formatSpeedPerSecond(speedPerSecond));
+                            mSpeedListener.onSpeedChange(speedPerSecond, UnitFormatUtils.formatSpeedPerSecond(speedPerSecond));
                         }
                     }
                 });

@@ -20,6 +20,20 @@ public class FreeApi extends Api {
         return Api.api(Service.class);
     }
 
+    public interface Code{
+        int SUCCESS = 200;
+    }
+
+    public interface Config {
+        String BASE_URL = "http://api.apiopen.top/";
+
+        String BASE_URL_OTHER_NAME = "other";
+        String BASE_URL_OTHER = "https://www.apiopen.top/";
+
+        String BASE_URL_ERROR_NAME = "error";
+        String BASE_URL_ERROR = "https://www.apiopen1.top/";
+    }
+
     public interface Service {
         /**
          * 随机单句诗词推荐
@@ -46,7 +60,7 @@ public class FreeApi extends Api {
          * 错误地址
          */
         @Headers({Header.BASE_URL_REDIRECT + ":" + Config.BASE_URL_ERROR_NAME})
-        @GET("weatherApi?")
+        @GET("weatherApi")
         Observable<ResponseBean<BaseBean>> errorHost();
     }
 }

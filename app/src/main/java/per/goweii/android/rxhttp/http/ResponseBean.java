@@ -12,11 +12,11 @@ import per.goweii.rxhttp.request.base.BaseResponse;
  */
 public class ResponseBean<E> implements BaseResponse<E> {
 
-    @SerializedName(value = "code")
+    @SerializedName(value = "code", alternate = {"status"})
     private int code;
-    @SerializedName(value = "result", alternate = {"data"})
+    @SerializedName(value = "data", alternate = {"result"})
     private E data;
-    @SerializedName(value = "message", alternate = {"msg"})
+    @SerializedName(value = "msg", alternate = {"message"})
     private String message;
 
     @Override

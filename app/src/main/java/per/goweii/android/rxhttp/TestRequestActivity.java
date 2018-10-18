@@ -1,6 +1,7 @@
 package per.goweii.android.rxhttp;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -13,7 +14,6 @@ import java.util.Map;
 import per.goweii.android.rxhttp.bean.RecommendPoetryBean;
 import per.goweii.android.rxhttp.bean.SinglePoetryBean;
 import per.goweii.android.rxhttp.bean.WeatherBean;
-import per.goweii.android.rxhttp.http.Config;
 import per.goweii.android.rxhttp.http.FreeApi;
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.core.RxLife;
@@ -34,22 +34,23 @@ public class TestRequestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_request);
         RxHttp.initRequest(new DefaultRequestSetting() {
+            @NonNull
             @Override
             public String getBaseUrl() {
-                return Config.BASE_URL;
+                return FreeApi.Config.BASE_URL;
             }
 
             @Override
             public Map<String, String> getMultiBaseUrl() {
                 Map<String, String> urls = new HashMap<>(2);
-                urls.put(Config.BASE_URL_OTHER_NAME, Config.BASE_URL_OTHER);
-                urls.put(Config.BASE_URL_ERROR_NAME, Config.BASE_URL_ERROR);
+                urls.put(FreeApi.Config.BASE_URL_OTHER_NAME, FreeApi.Config.BASE_URL_OTHER);
+                urls.put(FreeApi.Config.BASE_URL_ERROR_NAME, FreeApi.Config.BASE_URL_ERROR);
                 return urls;
             }
 
             @Override
             public int getSuccessCode() {
-                return 200;
+                return FreeApi.Code.SUCCESS;
             }
 
             @Override
@@ -128,7 +129,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onStopped(cast=" + cast + ")");
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<SinglePoetryBean>() {
             @Override
@@ -162,7 +163,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onStopped(cast=" + cast + ")");
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<RecommendPoetryBean>() {
             @Override
@@ -196,7 +197,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onStopped(cast=" + cast + ")");
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<WeatherBean>() {
             @Override
@@ -230,7 +231,7 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 long cast = System.currentTimeMillis() - timeStart;
-                log("onStopped(cast=" + cast + ")");
+                log("onFinish(cast=" + cast + ")");
             }
         }).request(new RxRequest.ResultCallback<BaseBean>() {
             @Override

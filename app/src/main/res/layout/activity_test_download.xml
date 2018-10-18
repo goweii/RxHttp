@@ -17,29 +17,99 @@
         android:id="@+id/pb_1"
         android:layout_width="match_parent"
         android:layout_marginTop="10dp"
-        android:layout_height="3dp"
-        android:background="#fff"
+        android:layout_height="10dp"
         style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+        android:minHeight="10dp"
         android:progress="0"
-        android:max="100"/>
+        android:max="10000"
+        tools:progress="2000"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:padding="8dp"
+        android:background="#fff"
+        android:layout_height="45dp"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:text="已下载："/>
+
+            <TextView
+                android:id="@+id/tv_download_length"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="12sp"
+                tools:text="546.98MB"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:text="速度："/>
+
+            <TextView
+                android:id="@+id/tv_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="12sp"
+                tools:text="5.12MB/s"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:text="总大小："/>
+
+            <TextView
+                android:id="@+id/tv_content_length"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="12sp"
+                tools:text="946.9MB"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
 
     <TextView
-        android:id="@+id/tv_start"
+        android:id="@+id/tv_start_stop"
         android:layout_width="match_parent"
         android:layout_marginTop="10dp"
         android:layout_height="45dp"
         android:background="#fff"
         android:gravity="center"
         android:text="开始下载"/>
-
-    <TextView
-        android:id="@+id/tv_stop"
-        android:layout_width="match_parent"
-        android:layout_marginTop="10dp"
-        android:layout_height="45dp"
-        android:background="#fff"
-        android:gravity="center"
-        android:text="停止下载"/>
 
     <TextView
         android:id="@+id/tv_cancel"

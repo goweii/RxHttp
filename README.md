@@ -292,7 +292,7 @@ RxRequest的设置
   - BASE_URL_REDIRECT：用于BaseUrl的重定向
   - CACHE_CONTROL_AGE：用于指定无网读取缓存
 
-- #### 静态方法api(Class< T> clazz)
+- #### 静态方法api(Class< T>)
 
   创建Api接口实例
 
@@ -533,7 +533,7 @@ RxDownload的设置
 
   - ##### onSpeedChange(float, String)
 
-    下载速度回调，两个值分别为每秒下载比特数和格式化后速度（如1.2KB/s,3.24MB/s）
+    下载速度回调，两个值分别为每秒下载比特数和格式化后速度（如：1.2KB/s，3.24MB/s）
 
 - #### start()
 
@@ -547,5 +547,26 @@ RxDownload的设置
 
   取消下载，会删除已下载的部分文件，再次开始会重新下载
 
+### UnitFormatUtils
 
+单位格式化工具
 
+- #### calculateSpeed(long, float)
+
+  计算速度
+
+- #### formatSpeedPerSecond(float)
+
+  格式化速度（如：1.12MB/s，628KB/s）
+
+- #### formatSpeed(float,TimeUnit)
+
+  格式化速度（如：1.12MB/s，628KB/s）
+
+- #### formatBytesLength(float)
+
+  格式化比特值（如：12.1KB,，187.24MB，154GB）
+
+- #### formatTimeUnit(TimeUnit)
+
+  格式化时间单位（如：秒为s，毫秒为ms）

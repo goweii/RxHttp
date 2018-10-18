@@ -6,15 +6,15 @@ import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 描述：
+ * 描述：单位格式化
  *
  * @author Cuizhen
  * @date 2018/10/18
  */
-public class SpeedUtils {
+public class UnitFormatUtils {
 
     private static class Format{
-        private static final DecimalFormat SPEED_FORMAT =  new DecimalFormat("#.##");
+        private static final DecimalFormat TWO =  new DecimalFormat("#.##");
     }
 
     public static float calculateSpeed(long increment, float duration) {
@@ -26,26 +26,37 @@ public class SpeedUtils {
     }
 
     public static String formatSpeed(float speedBytes, @NonNull TimeUnit timeUnit) {
-        float speed;
-        String unit1;
-        if (speedBytes < 1024) {
+        return formatBytesLength(speedBytes) + "/" + formatTimeUnit(timeUnit);
+    }
+    
+    public static String formatBytesLength(float bytes){
+        float length;
+        String unit;
+        if (bytes < 1024L) {
             // 0B~1KB
-            unit1 = "B";
-            speed = speedBytes;
-        } else if (speedBytes < 1024 * 1024) {
+            unit = "B";
+            length = bytes;
+        } else if (bytes < 1024L * 1024L) {
             // 1KB~1MB
-            unit1 = "KB";
-            speed = speedBytes / (1024);
+            unit = "KB";
+            length = bytes / (1024L);
+        } else if (bytes < 1024L * 1024L * 1024L){
+            // 1MB~1GB
+            unit = "MB";
+            length = bytes / (1024L * 1024L);
+        } else if (bytes < 1024L * 1024L * 1024L * 1024L){
+            // 1GB~1TB
+            unit = "GB";
+            length = bytes / (1024L * 1024L * 1024L);
         } else {
-            // 1MB~
-            unit1 = "MB";
-            speed = speedBytes / (1024 * 1024);
+            // 1TB~
+            unit = "TB";
+            length = bytes / (1024L * 1024L * 1024L * 1024L);
         }
-        String unit2 = getTimeUnit(timeUnit);
-        return Format.SPEED_FORMAT.format(speed) + unit1 + "/" + unit2;
+        return Format.TWO.format(length) + unit;
     }
 
-    private static String getTimeUnit(TimeUnit timeUnit){
+    public static String formatTimeUnit(TimeUnit timeUnit){
         if (timeUnit == null) {
             return "-";
         }
