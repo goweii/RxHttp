@@ -1,6 +1,6 @@
 # RxHttp
 
-对RxJava2+Retrofit2+Okhttp的封装，优雅实现接口请求和文件下载
+对RxJava2+Retrofit2+OkHttp3的封装，优雅实现接口请求和文件下载
 
 [GitHub主页](https://github.com/goweii/RxHttp)
 
@@ -271,8 +271,6 @@ RxRequest的设置
 
   添加自定义拦截器
 
-
-
 ### ExceptionHandle
 
 处理请求过程中的异常，可通过继承自定义。
@@ -289,10 +287,15 @@ RxRequest的设置
 
 - #### Header内部类
 
-  - BASE_URL_REDIRECT：用于BaseUrl的重定向
-  - CACHE_CONTROL_AGE：用于指定无网读取缓存
+  - ##### BASE_URL_REDIRECT
 
-- #### 静态方法api(Class< T>)
+    用于BaseUrl的重定向
+
+  - ##### CACHE_ALIVE_SECOND
+
+    指定一个int值用于设置缓存有效时长（秒）。配置后，在无网时强制使用缓存数据，有网时，如果小于等于0则强制联网获取，大于0则在改时间间隔内使用缓存，过期后联网获取。
+
+- #### api(Class< T>)静态方法
 
   创建Api接口实例
 

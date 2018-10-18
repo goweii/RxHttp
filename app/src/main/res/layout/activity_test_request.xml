@@ -43,7 +43,7 @@
                     android:gravity="center"
                     android:textSize="12sp"
                     android:textColor="#999999"
-                    android:text="正常请求"/>
+                    android:text="有网缓存10秒，无网强制缓存"/>
 
                 <TextView
                     android:id="@+id/tv_get_singlePoetry"
@@ -53,6 +53,21 @@
                     android:background="#ffff"
                     android:gravity="center"
                     android:text="随机单句诗词推荐" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:textColor="#999999"
+                    android:text="有网强制在线，无网强制缓存"/>
 
                 <TextView
                     android:id="@+id/tv_get_recommendPoetry"
@@ -68,7 +83,6 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -101,7 +115,6 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -110,7 +123,7 @@
                     android:gravity="center"
                     android:textSize="12sp"
                     android:textColor="#999999"
-                    android:text="Error"/>
+                    android:text="异常"/>
 
                 <TextView
                     android:id="@+id/tv_http_host_error"

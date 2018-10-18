@@ -148,9 +148,9 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
     public void cancel() {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             mDisposableDownload.dispose();
-            deleteSaveFile(mInfo);
         }
         mDisposableDownload = null;
+        deleteSaveFile(mInfo);
         if (mDownloadListener != null) {
             mDownloadListener.onCanceled();
         }

@@ -38,14 +38,14 @@ public class FreeApi extends Api {
         /**
          * 随机单句诗词推荐
          */
-        @Headers({Header.CACHE_CONTROL_AGE + ":" + 0})
+        @Headers({Header.CACHE_ALIVE_SECOND + ":" + 10})
         @GET("singlePoetry")
         Observable<ResponseBean<SinglePoetryBean>> singlePoetry();
 
         /**
          * 随机一首诗词推荐
          */
-        @Headers({Header.CACHE_CONTROL_AGE + ":" + 0})
+        @Headers({Header.CACHE_ALIVE_SECOND + ":" + 0})
         @GET("recommendPoetry")
         Observable<ResponseBean<RecommendPoetryBean>> recommendPoetry();
 

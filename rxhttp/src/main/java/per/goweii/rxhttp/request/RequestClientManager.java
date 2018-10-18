@@ -16,6 +16,7 @@ import per.goweii.rxhttp.core.utils.BaseUrlUtils;
 import per.goweii.rxhttp.core.utils.SDCardUtils;
 import per.goweii.rxhttp.request.interceptor.BaseUrlRedirectInterceptor;
 import per.goweii.rxhttp.request.interceptor.CacheControlInterceptor;
+import per.goweii.rxhttp.request.interceptor.CacheControlNetworkInterceptor;
 import per.goweii.rxhttp.request.interceptor.PublicQueryParameterInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -63,15 +64,18 @@ class RequestClientManager extends BaseClientManager {
 
     private OkHttpClient createOkHttpClient(){
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
         if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addInterceptor(logging);
         }
+
         builder.cache(createCache())
                 .connectTimeout(RxHttp.getRequestSetting().getTimeout(), TimeUnit.MILLISECONDS)
                 .readTimeout(RxHttp.getRequestSetting().getTimeout(), TimeUnit.MILLISECONDS)
                 .writeTimeout(RxHttp.getRequestSetting().getTimeout(), TimeUnit.MILLISECONDS);
+
         BaseUrlRedirectInterceptor.addTo(builder);
         PublicQueryParameterInterceptor.addTo(builder);
         CacheControlInterceptor.addTo(builder);
@@ -81,12 +85,15 @@ class RequestClientManager extends BaseClientManager {
                 builder.addInterceptor(interceptor);
             }
         }
+
+        CacheControlNetworkInterceptor.addTo(builder);
         Interceptor[] networkInterceptors = RxHttp.getRequestSetting().getNetworkInterceptors();
         if (networkInterceptors != null && networkInterceptors.length > 0) {
             for (Interceptor interceptor : networkInterceptors) {
                 builder.addNetworkInterceptor(interceptor);
             }
         }
+
         return builder.build();
     }
 
