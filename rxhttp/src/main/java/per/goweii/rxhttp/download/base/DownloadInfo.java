@@ -1,6 +1,5 @@
 package per.goweii.rxhttp.download.base;
 
-
 /**
  * 描述：
  *

@@ -21,8 +21,6 @@
 
 # 集成方式
 
-## 添加依赖
-
 1. 在Project的**build.gradle**添加仓库地址
 
    ```java
@@ -221,32 +219,114 @@ private void getTime() {
 
 RxRequest的设置
 
+- #### String getBaseUrl()
+
+- 默认的BaseUrl
+
+- #### Map<String, String> getMultiBaseUrl()
+
+  其他用于重定向的BaseUrl，Map的Key值为添加重定向Header的Value值，Map的Value值为BaseUrl
+
+- #### int getSuccessCode()
+
+  请求成功后服务器返回的成功Code值
+
+- #### int[] getMultiSuccessCode()
+
+  请求成功后服务器返回的其他成功Code值
+
+- #### long getTimeout()
+
+  超时时间
+
+- #### String getCacheDirName()
+
+  缓存文件夹名
+
+- #### long getCacheSize()
+
+  缓存大小
+
+- #### Map<String, String> getStaticPublicQueryParameter()
+
+  拼接在url后面的公共请求参数，静态字符串，如版本号等
+
+- #### Map<String, ParameterGetter> getDynamicPublicQueryParameter()
+
+  拼接在url后面的公共请求参数，需要动态获取的，如用户名等
+
+- #### < E extends ExceptionHandle> E getExceptionHandle()
+
+  获取自定义异常处理器
+
+- #### Interceptor[] getInterceptors()
+
+  添加自定义拦截器
+
+- #### Interceptor[] getNetworkInterceptors()
+
+  添加自定义拦截器
+
+
+
 ### ExceptionHandle
 
 处理请求过程中的异常，可通过继承自定义。
 
-- onGetCode(Throwable)：重写该方法去返回异常对应的错误码
-- onGetMsg(int)：重写该方法去返回错误码对应的错误信息
+- #### onGetCode(Throwable)
+
+  重写该方法去返回异常对应的错误码
+
+- #### onGetMsg(int)
+
+  重写该方法去返回错误码对应的错误信息
 
 ### Api
 
-- 内部类Header
+- #### Header内部类
+
   - BASE_URL_REDIRECT：用于BaseUrl的重定向
   - CACHE_CONTROL_AGE：用于指定无网读取缓存
-- 静态方法api(Class<T> clazz)：创建Api接口实例
+
+- #### 静态方法api(Class< T> clazz)
+
+  创建Api接口实例
 
 ### RxRequest
 
 用于发起请求
 
-- create(Observable<R>)：创建实例，传入参数为一个可观察对象，应该为Api接口返回
-- listener(RequestListener)：监听请求的生命周期
-  - onDownloading()：请求开始
-  - onError(ExceptionHandle)：请求出错，请见ExceptionHandle
-  - onStopped()：请求结束
-- request(ResultCallback<E>)：请求成功
-  - onSuccess(int, E)：服务器返回成功code
-  - onFailed(int, String)：服务器返回失败code
+- #### create(Observable< R>)
+
+  创建实例，传入参数为一个可观察对象，应该为Api接口返回
+
+- #### listener(RequestListener)
+
+  监听请求的生命周期
+
+  - ##### onDownloading()
+
+    请求开始
+
+  - ##### onError(ExceptionHandle)
+
+    请求出错，请见ExceptionHandle
+
+  - ##### onStopped()
+
+    请求结束
+
+- #### request(ResultCallback< E>)
+
+  请求成功
+
+  - ##### onSuccess(int, E)
+
+    服务器返回成功code
+
+  - ##### onFailed(int, String)
+
+    服务器返回失败code
 
 ### JsonFieldUtils
 
@@ -276,7 +356,7 @@ RxHttp.initDownload(new DefaultDownloadSetting() {
         });
 ```
 
-### 调用方式
+### 调用
 
 ```java
 RxDownload mRxDownload = RxDownload.create(et_url.getText().toString())
@@ -346,3 +426,122 @@ tv_cancel.setOnClickListener(new View.OnClickListener() {
     }
 });
 ```
+
+## 常用类说明
+
+### RxHttp
+
+用于初始化和设置
+
+### DownloadSetting/DefaultDownloadSetting
+
+RxDownload的设置
+
+- #### String getBaseUrl()
+
+  指定默认BaseUrl，传入一个合法的就可以了
+
+- #### long getTimeout()
+
+  指定超时时间，建议长一点，如60秒
+
+- #### String getSaveDirName()
+
+  指定默认的下载文件夹路径
+
+### DownloadInfo
+
+用于保存下载信息，如需断点续传，需要自己保存以下几个必传项
+
+- #### String url
+
+  下载文件的链接**（必传项）**
+
+- #### String saveDirName
+
+  自定义下载文件的保存目录**（断点续传时必传项）**
+
+- #### String saveFileName
+
+  自定义下载文件的保存文件名，需带后缀名**（断点续传时必传项）**
+
+- #### long downloadLength
+
+  已下载文件的长度**（断点续传时必传项）**
+
+- #### long contentLength
+
+  下载文件的总长度
+
+- #### State state
+
+  当前下载状态
+
+### RxDownload
+
+- #### create(String)
+
+  用于新建一个下载任务，参数为下载地址
+
+- #### create(String, String, String)
+
+  用于新建一个下载任务，参数为下载地址、保存目录、保存文件名
+
+- #### create(String, String, String,long)
+
+  用于新建一个断点续传下载任务，参数为下载地址、保存目录、保存文件名、已下载长度
+
+- #### setDownloadListener(DownloadListener)
+
+  设置下载状态监听
+
+  - ##### onStarting()
+
+    正在开始，正在连接服务器
+
+  - ##### onDownloading()
+
+    正在下载
+
+  - ##### onStopped()
+
+    已停止，不会删除已下载部分，支持断点续传
+
+  - ##### onCanceled()
+
+    已取消，会删除已下载的部分文件，再次开始会重新下载
+
+  - ##### onCompletion(DownloadInfo)
+
+    下载完成
+
+  - ##### onError(Throwable)
+
+    下载出错
+
+- #### setProgressListener(ProgressListener)
+
+  - ##### onProgress(float)
+
+    下载进度回调（0~1）
+
+- #### setSpeedListener(SpeedListener)
+
+  - ##### onSpeedChange(float, String)
+
+    下载速度回调，两个值分别为每秒下载比特数和格式化后速度（如1.2KB/s,3.24MB/s）
+
+- #### start()
+
+  开始下载/继续下载
+
+- #### stop()
+
+  停止下载，不会删除已下载部分，支持断点续传
+
+- #### cancel()
+
+  取消下载，会删除已下载的部分文件，再次开始会重新下载
+
+
+

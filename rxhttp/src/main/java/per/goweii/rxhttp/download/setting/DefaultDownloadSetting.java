@@ -14,7 +14,7 @@ public class DefaultDownloadSetting implements DownloadSetting {
     @NonNull
     @Override
     public String getBaseUrl() {
-        return "http://api.rxhttp.start/";
+        return "http://api.rxhttp.download/";
     }
 
     @Override

@@ -22,9 +22,11 @@ import okhttp3.ResponseBody;
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.core.utils.SDCardUtils;
 import per.goweii.rxhttp.download.base.DownloadInfo;
+import per.goweii.rxhttp.download.exception.SaveFileBrokenPointException;
 import per.goweii.rxhttp.download.exception.SaveFileDirMakeException;
 import per.goweii.rxhttp.download.exception.SaveFileWriteException;
 import per.goweii.rxhttp.download.interceptor.RealNameInterceptor;
+import per.goweii.rxhttp.download.utils.SpeedUtils;
 
 /**
  * 描述：网络请求
@@ -34,15 +36,15 @@ import per.goweii.rxhttp.download.interceptor.RealNameInterceptor;
  */
 public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
-    private final DownloadInfo mDownloadInfo;
+    private final DownloadInfo mInfo;
     private DownloadListener mDownloadListener = null;
     private ProgressListener mProgressListener = null;
     private SpeedListener mSpeedListener = null;
     private Disposable mDisposableDownload = null;
     private Disposable mDisposableSpeed = null;
 
-    private RxDownload(DownloadInfo downloadInfo) {
-        mDownloadInfo = downloadInfo;
+    private RxDownload(DownloadInfo info) {
+        mInfo = info;
     }
 
     public static RxDownload create(@NonNull String url) {
@@ -76,21 +78,23 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             return;
         }
-        mDisposableDownload = DownloadClientManager.getService(mDownloadInfo.downloadLength, mDownloadInfo.contentLength, this).download(mDownloadInfo.url)
+        mDisposableDownload = DownloadClientManager.getService(mInfo.downloadLength, mInfo.contentLength, this).download(mInfo.url)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .doOnNext(new Consumer<ResponseBody>() {
                     @Override
                     public void accept(ResponseBody responseBody) throws Exception {
-                        mDownloadInfo.contentLength = responseBody.contentLength();
-                        checkSaveFilePath(mDownloadInfo);
-                        File file = createSaveFile(mDownloadInfo);
-                        if (mDownloadInfo.downloadLength != file.length()) {
-                            if (file.delete()) {
-                                file = createSaveFile(mDownloadInfo);
-                            }
+                        if (mInfo.contentLength == 0) {
+                            mInfo.contentLength = responseBody.contentLength();
+                        } else if (mInfo.downloadLength + responseBody.contentLength() != mInfo.contentLength) {
+                            throw new SaveFileBrokenPointException();
                         }
-                        mDownloadInfo.state = DownloadInfo.State.DOWNLOADING;
+                        checkSaveFilePath(mInfo);
+                        File file = createSaveFile(mInfo);
+                        if (mInfo.downloadLength != file.length()) {
+                            throw new SaveFileBrokenPointException();
+                        }
+                        mInfo.state = DownloadInfo.State.DOWNLOADING;
                         notifyDownloading();
                         createSpeedObserver();
                         write(responseBody.byteStream(), file);
@@ -104,7 +108,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable e) throws Exception {
-                        mDownloadInfo.state = DownloadInfo.State.ERROR;
+                        mInfo.state = DownloadInfo.State.ERROR;
                         if (mDownloadListener != null) {
                             mDownloadListener.onError(e);
                         }
@@ -113,16 +117,16 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                 }, new Action() {
                     @Override
                     public void run() throws Exception {
-                        mDownloadInfo.state = DownloadInfo.State.COMPLETION;
+                        mInfo.state = DownloadInfo.State.COMPLETION;
                         if (mDownloadListener != null) {
-                            mDownloadListener.onCompletion(mDownloadInfo);
+                            mDownloadListener.onCompletion(mInfo);
                         }
                         cancelSpeedObserver();
                     }
                 }, new Consumer<Disposable>() {
                     @Override
                     public void accept(Disposable disposable) throws Exception {
-                        mDownloadInfo.state = DownloadInfo.State.STARTING;
+                        mInfo.state = DownloadInfo.State.STARTING;
                         if (mDownloadListener != null) {
                             mDownloadListener.onStarting();
                         }
@@ -144,7 +148,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
     public void cancel() {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             mDisposableDownload.dispose();
-            deleteSaveFile(mDownloadInfo);
+            deleteSaveFile(mInfo);
         }
         mDisposableDownload = null;
         if (mDownloadListener != null) {
@@ -153,7 +157,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         cancelSpeedObserver();
     }
 
-    private void checkSaveFilePath(DownloadInfo info) throws SaveFileDirMakeException {
+    private void checkSaveFilePath(DownloadInfo info) {
         if (TextUtils.isEmpty(info.saveDirName)) {
             info.saveDirName = RxHttp.getDownloadSetting().getSaveDirName();
             if (TextUtils.isEmpty(info.saveDirName)) {
@@ -178,7 +182,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
     private void deleteSaveFile(DownloadInfo info) {
         try {
             if (new File(info.saveDirName, info.saveFileName).delete()) {
-                mDownloadInfo.downloadLength = 0;
+                mInfo.downloadLength = 0;
             }
         } catch (Exception ignore) {
         }
@@ -192,7 +196,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
             int len;
             while ((len = is.read(buffer)) != -1) {
                 fos.write(buffer, 0, len);
-                mDownloadInfo.downloadLength += len;
+                mInfo.downloadLength += len;
                 notifyProgress();
             }
             fos.flush();
@@ -262,7 +266,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
                         @Override
                         public void onComplete() {
-                            float progress = (float) mDownloadInfo.downloadLength / (float) mDownloadInfo.contentLength;
+                            float progress = (float) mInfo.downloadLength / (float) mInfo.contentLength;
                             mProgressListener.onProgress(progress);
                         }
                     });
@@ -273,47 +277,27 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         if (mDisposableSpeed != null && !mDisposableSpeed.isDisposed()) {
             return;
         }
-        mDisposableSpeed = Observable.interval(1, TimeUnit.SECONDS)
+        mDisposableSpeed = Observable.interval(1, 1, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.computation())
                 .map(new Function<Long, Float>() {
                     private long lastDownloadLength = 0;
 
                     @Override
-                    public Float apply(Long aLong) throws Exception {
-                        float speed = (float) mDownloadInfo.downloadLength - (float) lastDownloadLength;
-                        lastDownloadLength = mDownloadInfo.downloadLength;
-                        return speed;
+                    public Float apply(Long ms) throws Exception {
+                        float bytesPerSecond = SpeedUtils.calculateSpeed(mInfo.downloadLength - lastDownloadLength, 1);
+                        lastDownloadLength = mInfo.downloadLength;
+                        return bytesPerSecond;
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<Float>() {
-
                     @Override
-                    public void accept(Float speed) throws Exception {
+                    public void accept(Float speedPerSecond) throws Exception {
                         if (mSpeedListener != null) {
-                            mSpeedListener.onSpeedChange(speed, formatSpeed(speed));
+                            mSpeedListener.onSpeedChange(speedPerSecond, SpeedUtils.formatSpeedPerSecond(speedPerSecond));
                         }
                     }
                 });
-    }
-
-    private String formatSpeed(float bytePerSecond) {
-        float speed;
-        String unit;
-        if (bytePerSecond < 1024) {
-            // 0B~1KB
-            unit = "B";
-            speed = bytePerSecond;
-        } else if (bytePerSecond < 1024 * 1024) {
-            // 1KB~1MB
-            unit = "KB";
-            speed = bytePerSecond / (1024);
-        } else {
-            // 1MB~
-            unit = "MB";
-            speed = bytePerSecond / (1024 * 1024);
-        }
-        return String.format("%.2f" + unit + "/s", speed);
     }
 
     private void cancelSpeedObserver() {
@@ -325,7 +309,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
     @Override
     public void onRealName(@NonNull String realName) {
-        mDownloadInfo.saveFileName = realName;
+        mInfo.saveFileName = realName;
     }
 
     public interface DownloadListener {
@@ -347,6 +331,6 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
     }
 
     public interface SpeedListener {
-        void onSpeedChange(float bytePerSecond, String speedFormat);
+        void onSpeedChange(float bytesPerSecond, String speedFormat);
     }
 }

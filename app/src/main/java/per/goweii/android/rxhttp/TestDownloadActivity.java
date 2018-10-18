@@ -15,8 +15,8 @@ import per.goweii.rxhttp.download.setting.DefaultDownloadSetting;
 
 public class TestDownloadActivity extends AppCompatActivity {
 
-    public static final String url_1 = "https://imtt.dd.qq.com/16891/601BBD228F1F77DB1FB03FE38EF9BC93.apk?fsname=com.tencent.tmgp.sgame_1.41.2.4_41020401.apk&csr=1bbd";
-    public static final String url = "https://imtt.dd.qq.com/16891/513D2C5324E6EBE77F94C85D7C76EBAE.apk?fsname=com.tencent.mobileqq_7.8.2_926.apk&csr=1bbd";
+    public static final String url = "https://imtt.dd.qq.com/16891/601BBD228F1F77DB1FB03FE38EF9BC93.apk?fsname=com.tencent.tmgp.sgame_1.41.2.4_41020401.apk&csr=1bbd";
+    public static final String url_1 = "https://imtt.dd.qq.com/16891/513D2C5324E6EBE77F94C85D7C76EBAE.apk?fsname=com.tencent.mobileqq_7.8.2_926.apk&csr=1bbd";
     private RxDownload mRxDownload;
 
     @Override
