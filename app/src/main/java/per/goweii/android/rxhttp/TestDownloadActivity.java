@@ -84,7 +84,7 @@ public class TestDownloadActivity extends AppCompatActivity {
             DownloadInfo info = DownloadInfo.create(downloadInfo.url,
                     downloadInfo.saveDirPath, downloadInfo.saveFileName,
                     downloadInfo.downloadLength, downloadInfo.contentLength);
-            info.mode = DownloadInfo.Mode.REPLACE;
+            info.mode = DownloadInfo.Mode.RENAME;
             mRxDownload = RxDownload.create(info);
         }
         mRxDownload.setDownloadListener(new RxDownload.DownloadListener() {

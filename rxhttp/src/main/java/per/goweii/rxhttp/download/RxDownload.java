@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
@@ -18,11 +17,12 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.ResponseBody;
+import per.goweii.rxhttp.download.exception.RangeLengthIsZeroException;
 import per.goweii.rxhttp.download.exception.SaveFileBrokenPointException;
 import per.goweii.rxhttp.download.exception.SaveFileDirMakeException;
 import per.goweii.rxhttp.download.exception.SaveFileWriteException;
 import per.goweii.rxhttp.download.utils.DownloadInfoChecker;
-import per.goweii.rxhttp.download.utils.RangeHeaderUtils;
+import per.goweii.rxhttp.download.utils.RxNotify;
 import per.goweii.rxhttp.download.utils.UnitFormatUtils;
 
 /**
@@ -71,7 +71,7 @@ public class RxDownload {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             return;
         }
-        mDisposableDownload = Observable.empty()
+        mDisposableDownload = Observable.just(0)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .doOnNext(new Consumer<Object>() {
@@ -84,7 +84,12 @@ public class RxDownload {
                 .map(new Function<Object, String>() {
                     @Override
                     public String apply(Object o) throws Exception {
-                        return RangeHeaderUtils.getValue(mInfo.downloadLength, mInfo.contentLength);
+                        long start = mInfo.downloadLength > 0 ? mInfo.downloadLength : 0;
+                        long end = mInfo.contentLength > 0 ? mInfo.contentLength : 0;
+                        if (start > 0 && end > 0 && end == start){
+                            throw new RangeLengthIsZeroException();
+                        }
+                        return "bytes=" + start + "-" + (end == 0 ? "" : end);
                     }
                 })
                 .flatMap(new Function<String, ObservableSource<ResponseBody>>() {
@@ -119,20 +124,27 @@ public class RxDownload {
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable e) throws Exception {
-                        mInfo.state = DownloadInfo.State.ERROR;
-                        if (mDownloadListener != null) {
-                            mDownloadListener.onError(mInfo, e);
-                        }
                         cancelSpeedObserver();
+                        if (e instanceof RangeLengthIsZeroException) {
+                            mInfo.state = DownloadInfo.State.COMPLETION;
+                            if (mDownloadListener != null) {
+                                mDownloadListener.onCompletion(mInfo);
+                            }
+                        } else {
+                            mInfo.state = DownloadInfo.State.ERROR;
+                            if (mDownloadListener != null) {
+                                mDownloadListener.onError(mInfo, e);
+                            }
+                        }
                     }
                 }, new Action() {
                     @Override
                     public void run() throws Exception {
+                        cancelSpeedObserver();
                         mInfo.state = DownloadInfo.State.COMPLETION;
                         if (mDownloadListener != null) {
                             mDownloadListener.onCompletion(mInfo);
                         }
-                        cancelSpeedObserver();
                     }
                 }, new Consumer<Disposable>() {
                     @Override
@@ -221,54 +233,24 @@ public class RxDownload {
 
     private void notifyDownloading() {
         if (mDownloadListener != null) {
-            Observable.empty()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Object>() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                        }
-
-                        @Override
-                        public void onNext(Object o) {
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                        }
-
-                        @Override
-                        public void onComplete() {
-                            mDownloadListener.onDownloading(mInfo);
-                        }
-                    });
+            RxNotify.runOnUiThread(new RxNotify.Action() {
+                @Override
+                public void run() {
+                    mDownloadListener.onDownloading(mInfo);
+                }
+            });
         }
     }
 
     private void notifyProgress() {
         if (mProgressListener != null) {
-            Observable.empty()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Object>() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                        }
-
-                        @Override
-                        public void onNext(Object o) {
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                        }
-
-                        @Override
-                        public void onComplete() {
-                            float progress = (float) mInfo.downloadLength / (float) mInfo.contentLength;
-                            mProgressListener.onProgress(progress, mInfo.downloadLength, mInfo.contentLength);
-                        }
-                    });
+            RxNotify.runOnUiThread(new RxNotify.Action() {
+                @Override
+                public void run() {
+                    float progress = (float) mInfo.downloadLength / (float) mInfo.contentLength;
+                    mProgressListener.onProgress(progress, mInfo.downloadLength, mInfo.contentLength);
+                }
+            });
         }
     }
 
