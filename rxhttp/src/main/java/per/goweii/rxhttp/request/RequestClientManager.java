@@ -23,7 +23,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
- * 描述：
+ * 描述：构建Retrofit实例，采用单例模式，全局共享同一个Retrofit
  *
  * @author Cuizhen
  * @date 2018/10/15
@@ -37,6 +37,11 @@ class RequestClientManager extends BaseClientManager {
         mRetrofit = create();
     }
 
+    /**
+     * 采用单例模式
+     *
+     * @return RequestClientManager
+     */
     private static RequestClientManager getInstance() {
         if (INSTANCE == null) {
             synchronized (RequestClientManager.class) {
@@ -48,12 +53,22 @@ class RequestClientManager extends BaseClientManager {
         return INSTANCE;
     }
 
+    /**
+     * 创建Api接口实例
+     *
+     * @param clazz Api接口类
+     * @param <T>   Api接口
+     * @return Api接口实例
+     */
     static <T> T getService(Class<T> clazz) {
         return getInstance().mRetrofit.create(clazz);
     }
 
+    /**
+     * 创建Retrofit实例
+     */
     @Override
-    protected Retrofit create(){
+    protected Retrofit create() {
         return new Retrofit.Builder()
                 .client(createOkHttpClient())
                 .baseUrl(BaseUrlUtils.checkBaseUrl(RxHttp.getRequestSetting().getBaseUrl()))
@@ -62,20 +77,30 @@ class RequestClientManager extends BaseClientManager {
                 .build();
     }
 
-    private OkHttpClient createOkHttpClient(){
+    /**
+     * 创建OkHttpClient实例
+     *
+     * @return OkHttpClient
+     */
+    private OkHttpClient createOkHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
+        // 设置调试模式打印日志
         if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addInterceptor(logging);
         }
-
-        builder.cache(createCache())
-                .connectTimeout(RxHttp.getRequestSetting().getTimeout(), TimeUnit.MILLISECONDS)
-                .readTimeout(RxHttp.getRequestSetting().getTimeout(), TimeUnit.MILLISECONDS)
-                .writeTimeout(RxHttp.getRequestSetting().getTimeout(), TimeUnit.MILLISECONDS);
-
+        // 设置缓存
+        builder.cache(createCache());
+        // 设置3个超时时长
+        long timeout = RxHttp.getRequestSetting().getTimeout();
+        long connectTimeout = RxHttp.getRequestSetting().getConnectTimeout();
+        long readTimeout = RxHttp.getRequestSetting().getReadTimeout();
+        long writeTimeout = RxHttp.getRequestSetting().getWriteTimeout();
+        builder.connectTimeout(connectTimeout > 0 ? connectTimeout : timeout, TimeUnit.MILLISECONDS);
+        builder.readTimeout(readTimeout > 0 ? readTimeout : timeout, TimeUnit.MILLISECONDS);
+        builder.writeTimeout(writeTimeout > 0 ? writeTimeout : timeout, TimeUnit.MILLISECONDS);
+        // 设置应用层拦截器
         BaseUrlRedirectInterceptor.addTo(builder);
         PublicQueryParameterInterceptor.addTo(builder);
         CacheControlInterceptor.addTo(builder);
@@ -85,7 +110,7 @@ class RequestClientManager extends BaseClientManager {
                 builder.addInterceptor(interceptor);
             }
         }
-
+        // 设置网络层拦截器
         CacheControlNetworkInterceptor.addTo(builder);
         Interceptor[] networkInterceptors = RxHttp.getRequestSetting().getNetworkInterceptors();
         if (networkInterceptors != null && networkInterceptors.length > 0) {
@@ -93,10 +118,14 @@ class RequestClientManager extends BaseClientManager {
                 builder.addNetworkInterceptor(interceptor);
             }
         }
-
         return builder.build();
     }
 
+    /**
+     * 创建缓存
+     *
+     * @return Cache
+     */
     private Cache createCache() {
         File cacheFile = new File(SDCardUtils.getCacheDir(), RxHttp.getRequestSetting().getCacheDirName());
         if (!cacheFile.exists()) {

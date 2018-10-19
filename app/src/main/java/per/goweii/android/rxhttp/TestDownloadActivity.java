@@ -1,8 +1,12 @@
 package per.goweii.android.rxhttp;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -10,7 +14,7 @@ import android.widget.TextView;
 
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.download.RxDownload;
-import per.goweii.rxhttp.download.base.DownloadInfo;
+import per.goweii.rxhttp.download.DownloadInfo;
 import per.goweii.rxhttp.download.setting.DefaultDownloadSetting;
 import per.goweii.rxhttp.download.utils.UnitFormatUtils;
 
@@ -29,12 +33,12 @@ public class TestDownloadActivity extends AppCompatActivity {
         RxHttp.initDownload(new DefaultDownloadSetting() {
             @Override
             public long getTimeout() {
-                return 5000;
+                return 60000;
             }
 
             @Nullable
             @Override
-            public String getSaveDirName() {
+            public String getSaveDirPath() {
                 return null;
             }
         });
@@ -67,36 +71,49 @@ public class TestDownloadActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mRxDownload.cancel();
+                isStart = false;
             }
         });
 
-        mRxDownload = RxDownload.create(et_url.getText().toString())
-                .setDownloadListener(new RxDownload.DownloadListener() {
+        DownloadInfo downloadInfo = getDownloadInfo();
+        if (downloadInfo == null) {
+            mRxDownload = RxDownload.create(DownloadInfo.create(et_url.getText().toString()));
+        } else {
+            tv_download_length.setText(UnitFormatUtils.formatBytesLength(downloadInfo.downloadLength));
+            tv_content_length.setText(UnitFormatUtils.formatBytesLength(downloadInfo.contentLength));
+            DownloadInfo info = DownloadInfo.create(downloadInfo.url,
+                    downloadInfo.saveDirPath, downloadInfo.saveFileName,
+                    downloadInfo.downloadLength, downloadInfo.contentLength);
+            info.mode = DownloadInfo.Mode.REPLACE;
+            mRxDownload = RxDownload.create(info);
+        }
+        mRxDownload.setDownloadListener(new RxDownload.DownloadListener() {
                     @Override
-                    public void onStarting() {
+                    public void onStarting(DownloadInfo info) {
                         tv_start_stop.setText("暂停下载");
                         tv_cancel.setText("取消下载");
                     }
 
                     @Override
-                    public void onDownloading() {
+                    public void onDownloading(DownloadInfo info) {
                         tv_start_stop.setText("暂停下载");
                     }
 
                     @Override
-                    public void onError(Throwable e) {
+                    public void onError(DownloadInfo info, Throwable e) {
                         tv_start_stop.setText("开始下载");
                         tv_speed.setText("");
                     }
 
                     @Override
-                    public void onStopped() {
+                    public void onStopped(DownloadInfo info) {
+                        saveDownloadInfo();
                         tv_start_stop.setText("开始下载");
                         tv_speed.setText("");
                     }
 
                     @Override
-                    public void onCanceled() {
+                    public void onCanceled(DownloadInfo info) {
                         tv_start_stop.setText("开始下载");
                         tv_cancel.setText("已取消");
                         pb_1.setProgress(0);
@@ -123,5 +140,50 @@ public class TestDownloadActivity extends AppCompatActivity {
                         tv_speed.setText(speedFormat);
                     }
                 });
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                if (isStart) {
+                    mRxDownload.stop();
+                    isStart = false;
+                    return false;
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private DownloadInfo getDownloadInfo() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        String url = sp.getString("url", "");
+        String saveDirName = sp.getString("saveDirPath", "");
+        String saveFileName = sp.getString("saveFileName", "");
+        long downloadLength = sp.getLong("downloadLength", 0);
+        long contentLength = sp.getLong("contentLength", 0);
+        if (TextUtils.isEmpty(url) || TextUtils.isEmpty(saveDirName) || TextUtils.isEmpty(saveFileName)){
+            return null;
+        }
+        if (downloadLength == 0){
+            return null;
+        }
+        if (contentLength <= downloadLength){
+            return null;
+        }
+        return DownloadInfo.create(url, saveDirName, saveFileName, 0, 0);
+    }
+
+    private void saveDownloadInfo() {
+        DownloadInfo info = mRxDownload.getDownloadInfo();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString("url", info.url);
+        editor.putString("saveDirPath", info.saveDirPath);
+        editor.putString("saveFileName", info.saveFileName);
+        editor.putLong("downloadLength", info.downloadLength);
+        editor.putLong("contentLength", info.contentLength);
+        editor.apply();
     }
 }

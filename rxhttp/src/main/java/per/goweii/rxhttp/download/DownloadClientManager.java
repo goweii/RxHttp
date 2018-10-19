@@ -6,9 +6,6 @@ import okhttp3.OkHttpClient;
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.core.manager.BaseClientManager;
 import per.goweii.rxhttp.core.utils.BaseUrlUtils;
-import per.goweii.rxhttp.download.base.DownloadApi;
-import per.goweii.rxhttp.download.interceptor.RangeInterceptor;
-import per.goweii.rxhttp.download.interceptor.RealNameInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
@@ -20,18 +17,31 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
  */
 class DownloadClientManager extends BaseClientManager {
 
-    private final RealNameInterceptor.RealNameCallback mRealNameCallback;
-    private final long mDownloadLength;
-    private final long mContentLength;
+    private static DownloadClientManager INSTANCE = null;
+    private final Retrofit mRetrofit;
 
-    private DownloadClientManager(long downloadLength, long contentLength, RealNameInterceptor.RealNameCallback realNameCallback) {
-        mDownloadLength = downloadLength;
-        mContentLength = contentLength;
-        mRealNameCallback = realNameCallback;
+    private DownloadClientManager() {
+        mRetrofit = create();
     }
 
-    static DownloadApi getService(long downloadLength, long contentLength, RealNameInterceptor.RealNameCallback realNameListener) {
-        return new DownloadClientManager(downloadLength, contentLength, realNameListener).create().create(DownloadApi.class);
+    /**
+     * 采用单例模式
+     *
+     * @return RequestClientManager
+     */
+    private static DownloadClientManager getInstance() {
+        if (INSTANCE == null) {
+            synchronized (DownloadClientManager.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new DownloadClientManager();
+                }
+            }
+        }
+        return INSTANCE;
+    }
+
+    static DownloadApi getService() {
+        return getInstance().mRetrofit.create(DownloadApi.class);
     }
 
     @Override
@@ -45,13 +55,13 @@ class DownloadClientManager extends BaseClientManager {
 
     private OkHttpClient createOkHttpClient(){
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.connectTimeout(RxHttp.getDownloadSetting().getTimeout(), TimeUnit.MILLISECONDS);
-        if (mRealNameCallback != null) {
-            builder.addInterceptor(new RealNameInterceptor(mRealNameCallback));
-        }
-        if (mDownloadLength > 0) {
-            builder.addInterceptor(new RangeInterceptor(mDownloadLength, mContentLength));
-        }
+        long timeout = RxHttp.getDownloadSetting().getTimeout();
+        long connectTimeout = RxHttp.getDownloadSetting().getConnectTimeout();
+        long readTimeout = RxHttp.getDownloadSetting().getReadTimeout();
+        long writeTimeout = RxHttp.getDownloadSetting().getWriteTimeout();
+        builder.connectTimeout(connectTimeout > 0 ? connectTimeout : timeout, TimeUnit.MILLISECONDS);
+        builder.readTimeout(readTimeout > 0 ? readTimeout : timeout, TimeUnit.MILLISECONDS);
+        builder.writeTimeout(writeTimeout > 0 ? writeTimeout : timeout, TimeUnit.MILLISECONDS);
         return builder.build();
     }
 }

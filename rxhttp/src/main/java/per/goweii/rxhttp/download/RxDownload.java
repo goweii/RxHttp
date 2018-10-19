@@ -1,8 +1,6 @@
 package per.goweii.rxhttp.download;
 
-import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,6 +9,7 @@ import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -19,13 +18,11 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.ResponseBody;
-import per.goweii.rxhttp.core.RxHttp;
-import per.goweii.rxhttp.core.utils.SDCardUtils;
-import per.goweii.rxhttp.download.base.DownloadInfo;
 import per.goweii.rxhttp.download.exception.SaveFileBrokenPointException;
 import per.goweii.rxhttp.download.exception.SaveFileDirMakeException;
 import per.goweii.rxhttp.download.exception.SaveFileWriteException;
-import per.goweii.rxhttp.download.interceptor.RealNameInterceptor;
+import per.goweii.rxhttp.download.utils.DownloadInfoChecker;
+import per.goweii.rxhttp.download.utils.RangeHeaderUtils;
 import per.goweii.rxhttp.download.utils.UnitFormatUtils;
 
 /**
@@ -34,7 +31,7 @@ import per.goweii.rxhttp.download.utils.UnitFormatUtils;
  * @author Cuizhen
  * @date 2018/9/9
  */
-public class RxDownload implements RealNameInterceptor.RealNameCallback {
+public class RxDownload {
 
     private final DownloadInfo mInfo;
     private DownloadListener mDownloadListener = null;
@@ -47,16 +44,8 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         mInfo = info;
     }
 
-    public static RxDownload create(@NonNull String url) {
-        return new RxDownload(DownloadInfo.create(url));
-    }
-
-    public static RxDownload create(@NonNull String url, String saveDirName, String saveFileName) {
-        return new RxDownload(DownloadInfo.create(url, saveDirName, saveFileName));
-    }
-
-    public static RxDownload create(@NonNull String url, String saveDirName, String saveFileName, @IntRange(from = 0) long downloadLength) {
-        return new RxDownload(DownloadInfo.create(url, saveDirName, saveFileName, downloadLength));
+    public static RxDownload create(@NonNull DownloadInfo info) {
+        return new RxDownload(info);
     }
 
     public RxDownload setDownloadListener(@NonNull DownloadListener listener) {
@@ -74,22 +63,44 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         return this;
     }
 
+    public DownloadInfo getDownloadInfo() {
+        return mInfo;
+    }
+
     public void start() {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             return;
         }
-        mDisposableDownload = DownloadClientManager.getService(mInfo.downloadLength, mInfo.contentLength, this).download(mInfo.url)
+        mDisposableDownload = Observable.empty()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
+                .doOnNext(new Consumer<Object>() {
+                    @Override
+                    public void accept(Object o) throws Exception {
+                        DownloadInfoChecker.checkDownloadLength(mInfo);
+                        DownloadInfoChecker.checkFilePath(mInfo);
+                    }
+                })
+                .map(new Function<Object, String>() {
+                    @Override
+                    public String apply(Object o) throws Exception {
+                        return RangeHeaderUtils.getValue(mInfo.downloadLength, mInfo.contentLength);
+                    }
+                })
+                .flatMap(new Function<String, ObservableSource<ResponseBody>>() {
+                    @Override
+                    public ObservableSource<ResponseBody> apply(String range) throws Exception {
+                        return DownloadClientManager.getService().download(range, mInfo.url);
+                    }
+                })
                 .doOnNext(new Consumer<ResponseBody>() {
                     @Override
                     public void accept(ResponseBody responseBody) throws Exception {
-                        if (mInfo.contentLength == 0) {
+                        if (mInfo.contentLength <= 0) {
                             mInfo.contentLength = responseBody.contentLength();
                         } else if (mInfo.downloadLength + responseBody.contentLength() != mInfo.contentLength) {
                             throw new SaveFileBrokenPointException();
                         }
-                        checkSaveFilePath(mInfo);
                         File file = createSaveFile(mInfo);
                         if (mInfo.downloadLength != file.length()) {
                             throw new SaveFileBrokenPointException();
@@ -110,7 +121,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                     public void accept(Throwable e) throws Exception {
                         mInfo.state = DownloadInfo.State.ERROR;
                         if (mDownloadListener != null) {
-                            mDownloadListener.onError(e);
+                            mDownloadListener.onError(mInfo, e);
                         }
                         cancelSpeedObserver();
                     }
@@ -128,7 +139,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
                     public void accept(Disposable disposable) throws Exception {
                         mInfo.state = DownloadInfo.State.STARTING;
                         if (mDownloadListener != null) {
-                            mDownloadListener.onStarting();
+                            mDownloadListener.onStarting(mInfo);
                         }
                     }
                 });
@@ -140,7 +151,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         }
         mDisposableDownload = null;
         if (mDownloadListener != null) {
-            mDownloadListener.onStopped();
+            mDownloadListener.onStopped(mInfo);
         }
         cancelSpeedObserver();
     }
@@ -152,25 +163,13 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         mDisposableDownload = null;
         deleteSaveFile(mInfo);
         if (mDownloadListener != null) {
-            mDownloadListener.onCanceled();
+            mDownloadListener.onCanceled(mInfo);
         }
         cancelSpeedObserver();
     }
 
-    private void checkSaveFilePath(DownloadInfo info) {
-        if (TextUtils.isEmpty(info.saveDirName)) {
-            info.saveDirName = RxHttp.getDownloadSetting().getSaveDirName();
-            if (TextUtils.isEmpty(info.saveDirName)) {
-                info.saveDirName = SDCardUtils.getDownloadCacheDir();
-            }
-        }
-        if (TextUtils.isEmpty(info.saveFileName)) {
-            info.saveFileName = System.currentTimeMillis() + ".rxdownload";
-        }
-    }
-
     private File createSaveFile(DownloadInfo info) throws SaveFileDirMakeException {
-        File file = new File(info.saveDirName, info.saveFileName);
+        File file = new File(info.saveDirPath, info.saveFileName);
         if (!file.getParentFile().exists()) {
             if (!file.getParentFile().mkdirs()) {
                 throw new SaveFileDirMakeException();
@@ -181,7 +180,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
     private void deleteSaveFile(DownloadInfo info) {
         try {
-            if (new File(info.saveDirName, info.saveFileName).delete()) {
+            if (new File(info.saveDirPath, info.saveFileName).delete()) {
                 mInfo.downloadLength = 0;
             }
         } catch (Exception ignore) {
@@ -240,7 +239,7 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
 
                         @Override
                         public void onComplete() {
-                            mDownloadListener.onDownloading();
+                            mDownloadListener.onDownloading(mInfo);
                         }
                     });
         }
@@ -307,23 +306,18 @@ public class RxDownload implements RealNameInterceptor.RealNameCallback {
         mDisposableSpeed = null;
     }
 
-    @Override
-    public void onRealName(@NonNull String realName) {
-        mInfo.saveFileName = realName;
-    }
-
     public interface DownloadListener {
-        void onStarting();
+        void onStarting(DownloadInfo info);
 
-        void onDownloading();
+        void onDownloading(DownloadInfo info);
 
-        void onStopped();
+        void onStopped(DownloadInfo info);
 
-        void onCanceled();
+        void onCanceled(DownloadInfo info);
 
         void onCompletion(DownloadInfo info);
 
-        void onError(Throwable e);
+        void onError(DownloadInfo info, Throwable e);
     }
 
     public interface ProgressListener {

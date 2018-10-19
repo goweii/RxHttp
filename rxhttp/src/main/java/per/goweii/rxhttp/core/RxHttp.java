@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 
 import io.reactivex.Observable;
 import per.goweii.rxhttp.core.exception.RxHttpUninitializedException;
+import per.goweii.rxhttp.download.DownloadInfo;
 import per.goweii.rxhttp.download.RxDownload;
 import per.goweii.rxhttp.download.exception.NullDownloadSettingException;
 import per.goweii.rxhttp.download.setting.DownloadSetting;
@@ -79,7 +80,7 @@ public class RxHttp {
         return RxRequest.create(observable);
     }
 
-    public static RxDownload download(@NonNull String url) {
-        return RxDownload.create(url);
+    public static RxDownload download(@NonNull DownloadInfo info) {
+        return RxDownload.create(info);
     }
 }

@@ -20,7 +20,7 @@ public class Api {
         String BASE_URL_REDIRECT = "RxHttp-BaseUrl-Redirect";
         /**
          * 添加以这个为名的Header可以让这个Request支持缓存（有网联网获取，无网读取缓存）
-         * 如//@Headers({Header.CACHE_ALIVE_SECOND + ":" + 0})
+         * 如//@Headers({Header.CACHE_ALIVE_SECOND + ":" + 10})
          */
         String CACHE_ALIVE_SECOND = "RxHttp-Cache-Alive-Second";
     }

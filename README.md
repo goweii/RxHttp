@@ -8,6 +8,10 @@
 
 
 
+[TOC]
+
+
+
 # 功能简介
 
 - 网络请求（RxRequest）
@@ -48,7 +52,7 @@
 
 
 
-# RxRequest
+# 发起请求之RxRequest
 
 ## 使用方法
 
@@ -73,7 +77,7 @@ RxHttp.initRequest(new DefaultRequestSetting() {
 
 ### 定义响应体结构
 
-定义ResponseBean<E>继承BaseResponse<E>，定义成员变量并实现方法。
+定义ResponseBean< E>继承BaseResponse< E>，定义成员变量并实现方法。
 
 ```java
 public class ResponseBean<E> implements BaseResponse<E> {
@@ -145,6 +149,14 @@ public class FreeApi extends Api {
         return Api.api(Service.class);
     }
 
+    public interface Code{
+        int SUCCESS = 200;
+    }
+
+    public interface Config {
+        String BASE_URL = "http://api.apiopen.top/";
+    }
+
     public interface Service {
         @GET("public/time")
         Observable<ResponseBean<TimeBean>> getTime();
@@ -183,9 +195,9 @@ private void getTime() {
         private long timeStart = 0;
 
         @Override
-        public void onDownloading() {
+        public void onStart() {
             log(null);
-            log("onDownloading()");
+            log("onStart()");
             timeStart = System.currentTimeMillis();
         }
 
@@ -219,9 +231,45 @@ private void getTime() {
 
 用于初始化和设置
 
+- #### init(Context)
+
+  初始化RxHttp，建议在自定义Application中进行
+
+- #### initRequest(RequestSetting)
+
+  初始化RxRequest，建议在自定义Application中进行
+
+- #### initDownload(DownloadSetting)
+
+  初始化RxDownload，建议在自定义Application中进行
+
+- #### request(Observable< R> )
+
+  发起一个请求，同RxRequest.request(Observable< R> )方法
+
+- #### download(String)
+
+  新建一个下载任务，同RxDownload.create(String)方法
+
+### RxLife
+
+用于管理请求的生命周期，防止内存泄露。
+
+- #### RxLife create()
+
+  在页面的onCreate方法调用，会返回一个RxLife实例
+
+- #### destroy()
+
+  在页面的onDestroy方法调用，终止所有未完成的请求
+
+- #### add(Disposable)
+
+  当调用RxHttp.request(Observable)或者RxRequest.create(Observable)方法发起一个请求时，会返回一个Disposable对象，调用该方法将其添加至管理队列
+
 ### RequestSetting/DefaultRequestSetting
 
-RxRequest的设置
+RxRequest的配置参数
 
 - #### String getBaseUrl()
 
@@ -241,7 +289,19 @@ RxRequest的设置
 
 - #### long getTimeout()
 
-  超时时间
+  默认超时时长，单位毫秒
+
+- #### long getConnectTimeout()
+
+  设置0则取getTimeout()，单位毫秒
+
+- #### long getReadTimeout()
+
+  设置0则取getTimeout()，单位毫秒
+
+- #### long getWriteTimeout()
+
+  设置0则取getTimeout()，单位毫秒
 
 - #### String getCacheDirName()
 
@@ -271,6 +331,34 @@ RxRequest的设置
 
   添加自定义拦截器
 
+### BaseResponse< E>
+
+服务器响应体数据结构，可自定义字段名
+
+- #### int getCode();
+
+- #### void setCode(int);
+
+- #### E getData();
+
+- #### void setData(E);
+
+- #### String getMsg();
+
+- #### void setMsg(Stringg);
+
+### BaseBean
+
+响应体Data的数据结构，建议继承自这个类，实现了Serializable接口，提供toJson方法
+
+- #### toJson()
+
+  转为Json字符串
+
+- #### toFormatJson()
+
+  转为格式化后的Json字符串，及花括号换行加缩进
+
 ### ExceptionHandle
 
 处理请求过程中的异常，可通过继承自定义。
@@ -285,6 +373,30 @@ RxRequest的设置
 
 ### Api
 
+强烈建议创建Api实例的类继承自该类。可在其中定义内部类接口管理常量数据，如：
+
+```java
+public class FreeApi extends Api {
+    
+	// 定义静态无参方法创建ApiService实例
+    public static Service api() {
+        return Api.api(Service.class);
+    }
+
+    public interface Code{
+        // 定义服务器返回的各种成功失败的状态码
+    }
+
+    public interface Config {
+        // 定义请求的各种配置信息，如BASE_URL/TIMEOUT等
+    }
+
+    public interface Service {
+        // 定义Retrofit的API声明接口
+    }
+}
+```
+
 - #### Header内部类
 
   - ##### BASE_URL_REDIRECT
@@ -293,7 +405,7 @@ RxRequest的设置
 
   - ##### CACHE_ALIVE_SECOND
 
-    指定一个int值用于设置缓存有效时长（秒）。配置后，在无网时强制使用缓存数据，有网时，如果小于等于0则强制联网获取，大于0则在改时间间隔内使用缓存，过期后联网获取。
+    指定一个int值用于设置缓存有效时长（秒）。配置后，在无网时强制使用缓存数据，有网时，如果小于等于0则强制联网获取，大于0则在该时长内使用缓存，过期后联网获取。
 
 - #### api(Class< T>)静态方法
 
@@ -345,7 +457,7 @@ RxRequest的设置
 
 
 
-# RxDownload
+# 文件下载之RxDownload
 
 ## 使用方法
 
@@ -401,7 +513,7 @@ RxDownload mRxDownload = RxDownload.create(et_url.getText().toString())
         })
         .setProgressListener(new RxDownload.ProgressListener() {
             @Override
-            public void onProgress(float progress) {
+            public void onProgress(float progress, long downloadLength, long contentLength) {
                 pb_1.setProgress((int) (progress * 100));
             }
         })
@@ -452,7 +564,7 @@ RxDownload的设置
 
   指定超时时间，建议长一点，如60秒
 
-- #### String getSaveDirName()
+- #### String getSaveDirPath()
 
   指定默认的下载文件夹路径
 
@@ -494,7 +606,7 @@ RxDownload的设置
 
   用于新建一个下载任务，参数为下载地址、保存目录、保存文件名
 
-- #### create(String, String, String,long)
+- #### create(String, String, String, long)
 
   用于新建一个断点续传下载任务，参数为下载地址、保存目录、保存文件名、已下载长度
 

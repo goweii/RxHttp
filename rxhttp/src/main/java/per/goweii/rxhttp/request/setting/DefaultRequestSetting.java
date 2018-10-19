@@ -37,6 +37,21 @@ public abstract class DefaultRequestSetting implements RequestSetting {
         return 5000;
     }
 
+    @Override
+    public long getConnectTimeout() {
+        return 0;
+    }
+
+    @Override
+    public long getReadTimeout() {
+        return 0;
+    }
+
+    @Override
+    public long getWriteTimeout() {
+        return 0;
+    }
+
     @NonNull
     @Override
     public String getCacheDirName() {

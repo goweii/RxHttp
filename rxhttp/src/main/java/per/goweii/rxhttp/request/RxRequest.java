@@ -33,11 +33,20 @@ public class RxRequest<T, R extends BaseResponse<T>> {
         return new RxRequest<>(observable);
     }
 
+    /**
+     * 添加请求生命周期的监听
+     */
     public RxRequest<T, R> listener(RequestListener listener) {
         mListener = listener;
         return this;
     }
 
+    /**
+     * 发起请求并设置成功回调
+     *
+     * @return Disposable 用于中断请求，管理请求生命周期
+     * 详见{@link per.goweii.rxhttp.core.RxLife}
+     */
     public Disposable request(@NonNull ResultCallback<T> callback) {
         mCallback = callback;
         return mObservable.subscribe(new Consumer<BaseResponse<T>>() {
@@ -57,7 +66,7 @@ public class RxRequest<T, R extends BaseResponse<T>> {
                 } else {
                     if (mListener != null) {
                         ExceptionHandle handle = RxHttp.getRequestSetting().getExceptionHandle();
-                        if (handle == null){
+                        if (handle == null) {
                             handle = new ExceptionHandle();
                         }
                         handle.handle(e);
