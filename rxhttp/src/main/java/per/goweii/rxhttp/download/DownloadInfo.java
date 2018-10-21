@@ -1,5 +1,9 @@
 package per.goweii.rxhttp.download;
 
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import per.goweii.rxhttp.core.RxHttp;
 
 /**
@@ -10,15 +14,23 @@ import per.goweii.rxhttp.core.RxHttp;
  */
 public class DownloadInfo {
 
+    @NonNull
     public String url;
+    @Nullable
     public String saveDirPath;
+    @Nullable
     public String saveFileName;
+    @IntRange(from = 0)
     public long downloadLength;
+    @IntRange(from = 0)
     public long contentLength;
+    @NonNull
     public State state;
+    @NonNull
     public Mode mode;
 
-    private DownloadInfo(String url, String saveDirPath, String saveFileName, long downloadLength, long contentLength) {
+    private DownloadInfo(@NonNull String url, @Nullable String saveDirPath, @Nullable String saveFileName,
+                         @IntRange(from = 0) long downloadLength, @IntRange(from = 0) long contentLength) {
         this.url = url;
         this.saveDirPath = saveDirPath;
         this.saveFileName = saveFileName;
@@ -28,15 +40,21 @@ public class DownloadInfo {
         this.mode = RxHttp.getDownloadSetting().getDefaultDownloadMode();
     }
 
-    public static DownloadInfo create(String url){
+    public static DownloadInfo create(@NonNull String url){
         return create(url, null, null);
     }
 
-    public static DownloadInfo create(String url, String saveDirPath, String saveFileName){
+    public static DownloadInfo create(@NonNull String url,
+                                      @Nullable String saveDirPath,
+                                      @Nullable String saveFileName){
         return create(url, saveDirPath, saveFileName, 0, 0);
     }
 
-    public static DownloadInfo create(String url, String saveDirPath, String saveFileName, long downloadLength, long contentLength){
+    public static DownloadInfo create(@NonNull String url,
+                                      @Nullable String saveDirPath,
+                                      @Nullable String saveFileName,
+                                      @IntRange(from = 0) long downloadLength,
+                                      @IntRange(from = 0) long contentLength){
         return new DownloadInfo(url, saveDirPath, saveFileName, downloadLength, contentLength);
     }
 

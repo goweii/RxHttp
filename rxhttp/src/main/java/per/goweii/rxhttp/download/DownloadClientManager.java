@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient;
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.core.manager.BaseClientManager;
 import per.goweii.rxhttp.core.utils.BaseUrlUtils;
+import per.goweii.rxhttp.download.interceptor.RealNameInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
@@ -62,6 +63,7 @@ class DownloadClientManager extends BaseClientManager {
         builder.connectTimeout(connectTimeout > 0 ? connectTimeout : timeout, TimeUnit.MILLISECONDS);
         builder.readTimeout(readTimeout > 0 ? readTimeout : timeout, TimeUnit.MILLISECONDS);
         builder.writeTimeout(writeTimeout > 0 ? writeTimeout : timeout, TimeUnit.MILLISECONDS);
+        RealNameInterceptor.addTo(builder);
         return builder.build();
     }
 }

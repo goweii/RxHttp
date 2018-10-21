@@ -120,4 +120,13 @@
         android:gravity="center"
         android:text="取消下载"/>
 
+    <TextView
+        android:id="@+id/tv_clean"
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_height="45dp"
+        android:background="#fff"
+        android:gravity="center"
+        android:text="清除记录"/>
+
 </LinearLayout>

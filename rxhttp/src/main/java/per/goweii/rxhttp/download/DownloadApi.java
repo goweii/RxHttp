@@ -17,9 +17,5 @@ import retrofit2.http.Url;
 public interface DownloadApi{
     @Streaming
     @GET
-    Observable<ResponseBody> download(@Url String url);
-
-    @Streaming
-    @GET
     Observable<ResponseBody> download(@Header("RANGE") String range, @Url String url);
 }

@@ -8,10 +8,6 @@
 
 
 
-[TOC]
-
-
-
 # 功能简介
 
 - 网络请求（RxRequest）
@@ -24,6 +20,9 @@
   - 支持断点续传
   - 支持下载进度回调
   - 支持下载速度回调
+  - 支持下载过程状态监听
+  - 支持在仅保存下载路径未保存进度时自动恢复
+  - 支持自动获取真实文件名
 
 
 
@@ -481,27 +480,27 @@ RxHttp.initDownload(new DefaultDownloadSetting() {
 RxDownload mRxDownload = RxDownload.create(et_url.getText().toString())
         .setDownloadListener(new RxDownload.DownloadListener() {
             @Override
-            public void onStarting() {
+            public void onStarting(DownloadInfo info) {
                 tv_start.setText("正在开始...");
             }
 
             @Override
-            public void onDownloading() {
+            public void onDownloading(DownloadInfo info) {
                 tv_start.setText("正在下载");
             }
 
             @Override
-            public void onError(Throwable e) {
+            public void onError(DownloadInfo info, Throwable e) {
                 tv_start.setText("下载失败");
             }
 
             @Override
-            public void onStopped() {
+            public void onStopped(DownloadInfo info) {
                 tv_start.setText("已停止");
             }
 
             @Override
-            public void onCanceled() {
+            public void onCanceled(DownloadInfo info) {
                 tv_start.setText("已取消");
                 pb_1.setProgress(0);
             }
@@ -514,7 +513,7 @@ RxDownload mRxDownload = RxDownload.create(et_url.getText().toString())
         .setProgressListener(new RxDownload.ProgressListener() {
             @Override
             public void onProgress(float progress, long downloadLength, long contentLength) {
-                pb_1.setProgress((int) (progress * 100));
+                pb_1.setProgress((int) (progress * 10000));
             }
         })
         .setSpeedListener(new RxDownload.SpeedListener() {
@@ -564,9 +563,25 @@ RxDownload的设置
 
   指定超时时间，建议长一点，如60秒
 
+- #### long getConnectTimeout()
+
+  设置0则取getTimeout()，单位毫秒
+
+- #### long getReadTimeout()
+
+  设置0则取getTimeout()，单位毫秒
+
+- #### long getWriteTimeout()
+
+  设置0则取getTimeout()，单位毫秒
+
 - #### String getSaveDirPath()
 
   指定默认的下载文件夹路径
+
+- #### DownloadInfo.Mode getDefaultDownloadMode()
+
+  获取保存路径的文件已存在但未保存下载进度时的默认模式
 
 ### DownloadInfo
 
@@ -576,7 +591,7 @@ RxDownload的设置
 
   下载文件的链接**（必传项）**
 
-- #### String saveDirName
+- #### String saveDirPath
 
   自定义下载文件的保存目录**（断点续传时必传项）**
 
@@ -596,19 +611,59 @@ RxDownload的设置
 
   当前下载状态
 
-### RxDownload
+  - ##### STARTING
+
+    正在开始
+
+  - ##### DOWNLOADING
+
+    正在下载
+
+  - ##### STOPPED
+
+    未开始/已停止
+
+  - ##### ERROR
+
+    下载出错
+
+  - ##### COMPLETION
+
+    下载完成
+
+- #### Mode mode
+
+  获取保存路径的文件已存在但未保存下载进度时的模式
+
+  - ##### APPEND
+
+    追加
+
+  - ##### REPLACE
+
+    替换
+
+  - ##### RENAME
+
+    重命名
 
 - #### create(String)
 
-  用于新建一个下载任务，参数为下载地址
+  创建一个下载对象，参数为url
 
 - #### create(String, String, String)
 
-  用于新建一个下载任务，参数为下载地址、保存目录、保存文件名
+  创建一个下载对象，参数为url/保存目录/文件名
 
-- #### create(String, String, String, long)
+- #### create(String, String, String, long, long)
 
-  用于新建一个断点续传下载任务，参数为下载地址、保存目录、保存文件名、已下载长度
+  创建一个下载对象，参数为url/保存目录/文件名/已下载长度/总长度
+
+### RxDownload
+
+- #### create(DownloadInfo)
+
+  用于新建一个下载任务
 
 - #### setDownloadListener(DownloadListener)
 

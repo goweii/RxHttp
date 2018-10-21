@@ -1,15 +1,20 @@
 package per.goweii.rxhttp.download;
 
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
@@ -21,6 +26,7 @@ import per.goweii.rxhttp.download.exception.RangeLengthIsZeroException;
 import per.goweii.rxhttp.download.exception.SaveFileBrokenPointException;
 import per.goweii.rxhttp.download.exception.SaveFileDirMakeException;
 import per.goweii.rxhttp.download.exception.SaveFileWriteException;
+import per.goweii.rxhttp.download.interceptor.DownloadResponseBody;
 import per.goweii.rxhttp.download.utils.DownloadInfoChecker;
 import per.goweii.rxhttp.download.utils.RxNotify;
 import per.goweii.rxhttp.download.utils.UnitFormatUtils;
@@ -71,113 +77,104 @@ public class RxDownload {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             return;
         }
-        mDisposableDownload = Observable.just(0)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .doOnNext(new Consumer<Object>() {
-                    @Override
-                    public void accept(Object o) throws Exception {
-                        DownloadInfoChecker.checkDownloadLength(mInfo);
-                        DownloadInfoChecker.checkFilePath(mInfo);
+        Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                DownloadInfoChecker.checkDownloadLength(mInfo);
+                DownloadInfoChecker.checkContentLength(mInfo);
+                emitter.onNext("bytes=" + mInfo.downloadLength + "-" + (mInfo.contentLength == 0 ? "" : mInfo.contentLength));
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).flatMap(new Function<String, ObservableSource<ResponseBody>>() {
+            @Override
+            public ObservableSource<ResponseBody> apply(String range) throws Exception {
+                return DownloadClientManager.getService().download(range, mInfo.url);
+            }
+        }).doOnNext(new Consumer<ResponseBody>() {
+            @Override
+            public void accept(ResponseBody responseBody) throws Exception {
+                if (mInfo.contentLength == 0) {
+                    mInfo.contentLength = mInfo.downloadLength + responseBody.contentLength();
+                } else if (mInfo.downloadLength + responseBody.contentLength() != mInfo.contentLength) {
+                    throw new SaveFileBrokenPointException();
+                }
+                DownloadInfoChecker.checkDirPath(mInfo);
+                if (TextUtils.isEmpty(mInfo.saveFileName)) {
+                    Class clazz = responseBody.getClass();
+                    Field field = clazz.getDeclaredField("delegate");
+                    field.setAccessible(true);
+                    DownloadResponseBody body = (DownloadResponseBody) field.get(responseBody);
+                    mInfo.saveFileName = body.getRealName();
+                }
+                DownloadInfoChecker.checkFileName(mInfo);
+                mInfo.state = DownloadInfo.State.DOWNLOADING;
+                notifyDownloading();
+                write(responseBody.byteStream(), createSaveFile(mInfo));
+            }
+        }).observeOn(AndroidSchedulers.mainThread()).doOnDispose(new Action() {
+            @Override
+            public void run() throws Exception {
+                cancelSpeedObserver();
+            }
+        }).subscribe(new Observer<ResponseBody>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                mDisposableDownload = d;
+                mInfo.state = DownloadInfo.State.STARTING;
+                if (mDownloadListener != null) {
+                    mDownloadListener.onStarting(mInfo);
+                }
+            }
+
+            @Override
+            public void onNext(ResponseBody responseBody) {
+                mInfo.state = DownloadInfo.State.COMPLETION;
+                if (mDownloadListener != null) {
+                    mDownloadListener.onCompletion(mInfo);
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                if (e instanceof RangeLengthIsZeroException) {
+                    mInfo.state = DownloadInfo.State.COMPLETION;
+                    if (mDownloadListener != null) {
+                        mDownloadListener.onCompletion(mInfo);
                     }
-                })
-                .map(new Function<Object, String>() {
-                    @Override
-                    public String apply(Object o) throws Exception {
-                        long start = mInfo.downloadLength > 0 ? mInfo.downloadLength : 0;
-                        long end = mInfo.contentLength > 0 ? mInfo.contentLength : 0;
-                        if (start > 0 && end > 0 && end == start){
-                            throw new RangeLengthIsZeroException();
-                        }
-                        return "bytes=" + start + "-" + (end == 0 ? "" : end);
+                } else {
+                    mInfo.state = DownloadInfo.State.ERROR;
+                    if (mDownloadListener != null) {
+                        mDownloadListener.onError(mInfo, e);
                     }
-                })
-                .flatMap(new Function<String, ObservableSource<ResponseBody>>() {
-                    @Override
-                    public ObservableSource<ResponseBody> apply(String range) throws Exception {
-                        return DownloadClientManager.getService().download(range, mInfo.url);
-                    }
-                })
-                .doOnNext(new Consumer<ResponseBody>() {
-                    @Override
-                    public void accept(ResponseBody responseBody) throws Exception {
-                        if (mInfo.contentLength <= 0) {
-                            mInfo.contentLength = responseBody.contentLength();
-                        } else if (mInfo.downloadLength + responseBody.contentLength() != mInfo.contentLength) {
-                            throw new SaveFileBrokenPointException();
-                        }
-                        File file = createSaveFile(mInfo);
-                        if (mInfo.downloadLength != file.length()) {
-                            throw new SaveFileBrokenPointException();
-                        }
-                        mInfo.state = DownloadInfo.State.DOWNLOADING;
-                        notifyDownloading();
-                        createSpeedObserver();
-                        write(responseBody.byteStream(), file);
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<ResponseBody>() {
-                    @Override
-                    public void accept(ResponseBody responseBody) throws Exception {
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable e) throws Exception {
-                        cancelSpeedObserver();
-                        if (e instanceof RangeLengthIsZeroException) {
-                            mInfo.state = DownloadInfo.State.COMPLETION;
-                            if (mDownloadListener != null) {
-                                mDownloadListener.onCompletion(mInfo);
-                            }
-                        } else {
-                            mInfo.state = DownloadInfo.State.ERROR;
-                            if (mDownloadListener != null) {
-                                mDownloadListener.onError(mInfo, e);
-                            }
-                        }
-                    }
-                }, new Action() {
-                    @Override
-                    public void run() throws Exception {
-                        cancelSpeedObserver();
-                        mInfo.state = DownloadInfo.State.COMPLETION;
-                        if (mDownloadListener != null) {
-                            mDownloadListener.onCompletion(mInfo);
-                        }
-                    }
-                }, new Consumer<Disposable>() {
-                    @Override
-                    public void accept(Disposable disposable) throws Exception {
-                        mInfo.state = DownloadInfo.State.STARTING;
-                        if (mDownloadListener != null) {
-                            mDownloadListener.onStarting(mInfo);
-                        }
-                    }
-                });
+                }
+            }
+
+            @Override
+            public void onComplete() {
+            }
+        });
     }
 
     public void stop() {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             mDisposableDownload.dispose();
+            mDisposableDownload = null;
         }
-        mDisposableDownload = null;
+        mInfo.state = DownloadInfo.State.STOPPED;
         if (mDownloadListener != null) {
             mDownloadListener.onStopped(mInfo);
         }
-        cancelSpeedObserver();
     }
 
     public void cancel() {
         if (mDisposableDownload != null && !mDisposableDownload.isDisposed()) {
             mDisposableDownload.dispose();
+            mDisposableDownload = null;
         }
-        mDisposableDownload = null;
         deleteSaveFile(mInfo);
+        mInfo.state = DownloadInfo.State.STOPPED;
         if (mDownloadListener != null) {
             mDownloadListener.onCanceled(mInfo);
         }
-        cancelSpeedObserver();
     }
 
     private File createSaveFile(DownloadInfo info) throws SaveFileDirMakeException {
@@ -200,6 +197,7 @@ public class RxDownload {
     }
 
     private void write(InputStream is, File file) throws SaveFileWriteException {
+        createSpeedObserver();
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(file, true);
