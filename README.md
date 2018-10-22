@@ -11,9 +11,9 @@
 # 功能简介
 
 - 网络请求（RxRequest）
-  - 监听请求声明周期，如开始结束和网络错误等
+  - 支持监听请求声明周期，如开始结束和网络错误
   - 支持多BaseUrl，可针对不同请求重定向
-  - 支持无网强制获取缓存数据
+  - 支持针对不同请求设置不同缓存策略，如无网强制获取缓存，有网缓存有效10秒
   - 支持添加公共请求参数
   - 支持自定义异常处理和异常提示消息
 - 文件下载（RxDownload）
@@ -21,7 +21,7 @@
   - 支持下载进度回调
   - 支持下载速度回调
   - 支持下载过程状态监听
-  - 支持在仅保存下载路径未保存进度时自动恢复
+  - 支持在仅保存下载路径未保存进度时自动恢复断点续传
   - 支持自动获取真实文件名
 
 
@@ -206,9 +206,9 @@ private void getTime() {
         }
 
         @Override
-        public void onStopped() {
+        public void onFinish() {
             long cast = System.currentTimeMillis() - timeStart;
-            log("onStopped(cast=" + cast + ")");
+            log("onFinish(cast=" + cast + ")");
         }
     }).request(new RxRequest.ResultCallback<TimeBean>() {
         @Override
@@ -422,7 +422,7 @@ public class FreeApi extends Api {
 
   监听请求的生命周期
 
-  - ##### onDownloading()
+  - ##### onStart()
 
     请求开始
 
@@ -430,7 +430,7 @@ public class FreeApi extends Api {
 
     请求出错，请见ExceptionHandle
 
-  - ##### onStopped()
+  - ##### onFinish()
 
     请求结束
 
@@ -466,12 +466,13 @@ public class FreeApi extends Api {
 
 ```java
 RxHttp.init(this);
+// 可选，未配置设置将自动采用DefaultDownloadSetting
 RxHttp.initDownload(new DefaultDownloadSetting() {
             @Override
             public long getTimeout() {
                 return 60000;
             }
-        });
+        }); 
 ```
 
 ### 调用

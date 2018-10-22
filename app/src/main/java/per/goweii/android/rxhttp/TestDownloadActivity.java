@@ -3,7 +3,6 @@ package per.goweii.android.rxhttp;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -12,10 +11,8 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import per.goweii.rxhttp.core.RxHttp;
-import per.goweii.rxhttp.download.RxDownload;
 import per.goweii.rxhttp.download.DownloadInfo;
-import per.goweii.rxhttp.download.setting.DefaultDownloadSetting;
+import per.goweii.rxhttp.download.RxDownload;
 import per.goweii.rxhttp.download.utils.UnitFormatUtils;
 
 public class TestDownloadActivity extends AppCompatActivity {
@@ -29,19 +26,6 @@ public class TestDownloadActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_download);
-
-        RxHttp.initDownload(new DefaultDownloadSetting() {
-            @Override
-            public long getTimeout() {
-                return 60000;
-            }
-
-            @Nullable
-            @Override
-            public String getSaveDirPath() {
-                return null;
-            }
-        });
 
         EditText et_url = findViewById(R.id.et_url);
         ProgressBar pb_1 = findViewById(R.id.pb_1);

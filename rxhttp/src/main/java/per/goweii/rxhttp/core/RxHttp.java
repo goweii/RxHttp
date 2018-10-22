@@ -8,7 +8,7 @@ import io.reactivex.Observable;
 import per.goweii.rxhttp.core.exception.RxHttpUninitializedException;
 import per.goweii.rxhttp.download.DownloadInfo;
 import per.goweii.rxhttp.download.RxDownload;
-import per.goweii.rxhttp.download.exception.NullDownloadSettingException;
+import per.goweii.rxhttp.download.setting.DefaultDownloadSetting;
 import per.goweii.rxhttp.download.setting.DownloadSetting;
 import per.goweii.rxhttp.request.RxRequest;
 import per.goweii.rxhttp.request.base.BaseResponse;
@@ -71,7 +71,7 @@ public class RxHttp {
     public static DownloadSetting getDownloadSetting() {
         DownloadSetting setting = getInstance().mDownloadSetting;
         if (setting == null) {
-            throw new NullDownloadSettingException();
+            setting = new DefaultDownloadSetting();
         }
         return setting;
     }

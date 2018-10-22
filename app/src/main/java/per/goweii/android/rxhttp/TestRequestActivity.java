@@ -3,6 +3,7 @@ package per.goweii.android.rxhttp;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -251,7 +252,12 @@ public class TestRequestActivity extends AppCompatActivity {
             tvLog.setText("");
         } else {
             Log.d(TAG, text);
-            tvLog.setText(tvLog.getText().toString() + "\n" + text);
+            String textOld = tvLog.getText().toString();
+            if (TextUtils.isEmpty(textOld)) {
+                tvLog.setText(text);
+            } else {
+                tvLog.setText(tvLog.getText().toString() + "\n" + text);
+            }
         }
     }
 }

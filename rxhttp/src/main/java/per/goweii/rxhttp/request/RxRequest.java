@@ -9,6 +9,7 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import per.goweii.rxhttp.core.RxHttp;
+import per.goweii.rxhttp.core.RxLife;
 import per.goweii.rxhttp.request.base.BaseResponse;
 import per.goweii.rxhttp.request.exception.ApiException;
 import per.goweii.rxhttp.request.exception.ExceptionHandle;
@@ -22,8 +23,9 @@ import per.goweii.rxhttp.request.exception.ExceptionHandle;
 public class RxRequest<T, R extends BaseResponse<T>> {
 
     private final Observable<R> mObservable;
-    private ResultCallback<T> mCallback;
-    private RequestListener mListener;
+    private ResultCallback<T> mCallback = null;
+    private RequestListener mListener = null;
+    private RxLife mRxLife = null;
 
     private RxRequest(Observable<R> observable) {
         mObservable = observable.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
@@ -42,14 +44,24 @@ public class RxRequest<T, R extends BaseResponse<T>> {
     }
 
     /**
+     * 用于中断请求，管理请求生命周期
+     *
+     * @param rxLife 详见{@link RxLife}
+     */
+    public RxRequest<T, R> autoLife(RxLife rxLife) {
+        mRxLife = rxLife;
+        return this;
+    }
+
+    /**
      * 发起请求并设置成功回调
      *
      * @return Disposable 用于中断请求，管理请求生命周期
-     * 详见{@link per.goweii.rxhttp.core.RxLife}
+     * 详见{@link RxLife}
      */
     public Disposable request(@NonNull ResultCallback<T> callback) {
         mCallback = callback;
-        return mObservable.subscribe(new Consumer<BaseResponse<T>>() {
+        Disposable disposable = mObservable.subscribe(new Consumer<BaseResponse<T>>() {
             @Override
             public void accept(BaseResponse<T> bean) throws Exception {
                 if (!isSuccess(bean.getCode())) {
@@ -92,6 +104,10 @@ public class RxRequest<T, R extends BaseResponse<T>> {
                 }
             }
         });
+        if (mRxLife != null) {
+            mRxLife.add(disposable);
+        }
+        return disposable;
     }
 
     private boolean isSuccess(int code) {
