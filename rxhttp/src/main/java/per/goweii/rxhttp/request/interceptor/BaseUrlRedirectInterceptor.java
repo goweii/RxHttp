@@ -1,6 +1,7 @@
 package per.goweii.rxhttp.request.interceptor;
 
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -56,11 +57,18 @@ public class BaseUrlRedirectInterceptor implements Interceptor {
         if (baseUrl == null) {
             return chain.proceed(original);
         }
-        HttpUrl newHttpUrl = original.url().newBuilder()
+        HttpUrl.Builder newHttpUrlBuilder = original.url().newBuilder()
                 .scheme(baseUrl.scheme())
                 .host(baseUrl.host())
-                .port(baseUrl.port())
-                .build();
+                .port(baseUrl.port());
+        for (int i = 0; i < baseUrl.pathSegments().size(); i++) {
+            String segment = baseUrl.pathSegments().get(i);
+            if (TextUtils.isEmpty(segment)){
+                break;
+            }
+            newHttpUrlBuilder.setPathSegment(i, segment);
+        }
+        HttpUrl newHttpUrl = newHttpUrlBuilder.build();
         Request newRequest = builder.url(newHttpUrl).build();
         return chain.proceed(newRequest);
     }
