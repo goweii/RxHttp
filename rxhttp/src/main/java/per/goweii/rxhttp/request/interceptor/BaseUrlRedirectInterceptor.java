@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,27 +50,52 @@ public class BaseUrlRedirectInterceptor implements Interceptor {
         Request.Builder builder = original.newBuilder();
         builder.removeHeader(Api.Header.BASE_URL_REDIRECT);
         String urlName = urlNames.get(0);
-        String url = urls.get(urlName);
-        if (url == null) {
+        String newUrl = urls.get(urlName);
+        if (newUrl == null) {
             return chain.proceed(original);
         }
-        HttpUrl baseUrl = HttpUrl.parse(BaseUrlUtils.checkBaseUrl(url));
-        if (baseUrl == null) {
+        HttpUrl newHttpUrl = HttpUrl.parse(BaseUrlUtils.checkBaseUrl(newUrl));
+        if (newHttpUrl == null) {
             return chain.proceed(original);
         }
-        HttpUrl.Builder newHttpUrlBuilder = original.url().newBuilder()
-                .scheme(baseUrl.scheme())
-                .host(baseUrl.host())
-                .port(baseUrl.port());
-        for (int i = 0; i < baseUrl.pathSegments().size(); i++) {
-            String segment = baseUrl.pathSegments().get(i);
+        HttpUrl oldHttpUrl = original.url();
+        List<String> pathSegments = new ArrayList<>(oldHttpUrl.pathSegments());
+        int oldCount = defaultBaseUrlPathSegmentCount();
+        for (int i = 0; i < oldCount; i++) {
+            pathSegments.remove(0);
+        }
+        HttpUrl.Builder newHttpUrlBuilder = oldHttpUrl.newBuilder()
+                .scheme(newHttpUrl.scheme())
+                .host(newHttpUrl.host())
+                .port(newHttpUrl.port());
+        for (int i = newHttpUrl.pathSegments().size() - 1; i >= 0; i--) {
+            String segment = newHttpUrl.pathSegments().get(i);
             if (TextUtils.isEmpty(segment)){
-                break;
+                continue;
             }
-            newHttpUrlBuilder.setPathSegment(i, segment);
+            pathSegments.add(0, segment);
+            newHttpUrlBuilder.removePathSegment(0);
         }
-        HttpUrl newHttpUrl = newHttpUrlBuilder.build();
-        Request newRequest = builder.url(newHttpUrl).build();
+        for (int i = 0; i < pathSegments.size(); i++) {
+            newHttpUrlBuilder.addPathSegment(pathSegments.get(i));
+        }
+        Request newRequest = builder.url(newHttpUrlBuilder.build()).build();
         return chain.proceed(newRequest);
+    }
+
+    private int defaultBaseUrlPathSegmentCount(){
+        HttpUrl oldHttpUrl = HttpUrl.parse(BaseUrlUtils.checkBaseUrl(RxHttp.getRequestSetting().getBaseUrl()));
+        if (oldHttpUrl == null) {
+            return 0;
+        }
+        List<String> oldSegments = oldHttpUrl.pathSegments();
+        if (oldSegments == null || oldSegments.size() == 0){
+            return 0;
+        }
+        int count = oldSegments.size();
+        if (TextUtils.isEmpty(oldSegments.get(count - 1))) {
+            count--;
+        }
+        return count;
     }
 }
