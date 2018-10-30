@@ -68,12 +68,16 @@ public class BaseUrlRedirectInterceptor implements Interceptor {
                 .scheme(newHttpUrl.scheme())
                 .host(newHttpUrl.host())
                 .port(newHttpUrl.port());
-        for (int i = newHttpUrl.pathSegments().size() - 1; i >= 0; i--) {
+        int size1 = newHttpUrl.pathSegments().size();
+        for (int i = size1 - 1; i >= 0; i--) {
             String segment = newHttpUrl.pathSegments().get(i);
             if (TextUtils.isEmpty(segment)){
                 continue;
             }
             pathSegments.add(0, segment);
+        }
+        int size2 = oldHttpUrl.pathSegments().size();
+        for (int i = 0; i < size2; i++) {
             newHttpUrlBuilder.removePathSegment(0);
         }
         for (int i = 0; i < pathSegments.size(); i++) {
