@@ -12,6 +12,10 @@ import android.widget.TextView;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+
+import okhttp3.OkHttpClient;
 import per.goweii.android.rxhttp.bean.RecommendPoetryBean;
 import per.goweii.android.rxhttp.bean.SinglePoetryBean;
 import per.goweii.android.rxhttp.bean.WeatherBean;
@@ -46,6 +50,7 @@ public class TestRequestActivity extends AppCompatActivity {
                 Map<String, String> urls = new HashMap<>(2);
                 urls.put(FreeApi.Config.BASE_URL_OTHER_NAME, FreeApi.Config.BASE_URL_OTHER);
                 urls.put(FreeApi.Config.BASE_URL_ERROR_NAME, FreeApi.Config.BASE_URL_ERROR);
+                urls.put(FreeApi.Config.BASE_URL_HTTPS_NAME, FreeApi.Config.BASE_URL_HTTPS);
                 return urls;
             }
 
@@ -74,6 +79,16 @@ public class TestRequestActivity extends AppCompatActivity {
                 });
                 return parameters;
             }
+
+            @Override
+            public void setOkHttpClient(OkHttpClient.Builder builder) {
+                builder.hostnameVerifier(new HostnameVerifier() {
+                    @Override
+                    public boolean verify(String hostname, SSLSession session) {
+                        return true;
+                    }
+                });
+            }
         });
         mRxLife = RxLife.create();
 
@@ -101,6 +116,12 @@ public class TestRequestActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 getErrorHost();
+            }
+        });
+        findViewById(R.id.tv_https).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getHttps();
             }
         });
     }
@@ -215,6 +236,40 @@ public class TestRequestActivity extends AppCompatActivity {
 
     private void getErrorHost() {
         mRxLife.add(RxRequest.create(FreeApi.api().errorHost()).listener(new RxRequest.RequestListener() {
+            private long timeStart = 0;
+
+            @Override
+            public void onStart() {
+                log(null);
+                log("onStart()");
+                timeStart = System.currentTimeMillis();
+            }
+
+            @Override
+            public void onError(ExceptionHandle handle) {
+                log("onError(" + handle.getMsg() + ")");
+            }
+
+            @Override
+            public void onFinish() {
+                long cast = System.currentTimeMillis() - timeStart;
+                log("onFinish(cast=" + cast + ")");
+            }
+        }).request(new RxRequest.ResultCallback<BaseBean>() {
+            @Override
+            public void onSuccess(int code, BaseBean data) {
+                log("onSuccess(code=" + code + ",data=" + data.toFormatJson() + ")");
+            }
+
+            @Override
+            public void onFailed(int code, String msg) {
+                log("onFailed(code=" + code + ",msg=" + msg + ")");
+            }
+        }));
+    }
+
+    private void getHttps() {
+        mRxLife.add(RxRequest.create(FreeApi.api().https("哈哈")).listener(new RxRequest.RequestListener() {
             private long timeStart = 0;
 
             @Override

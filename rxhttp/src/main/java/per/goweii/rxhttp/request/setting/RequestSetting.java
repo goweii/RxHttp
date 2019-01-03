@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import java.util.Map;
 
 import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
 import per.goweii.rxhttp.request.exception.ExceptionHandle;
 
 /**
@@ -81,5 +82,7 @@ public interface RequestSetting {
 
     @Nullable
     Interceptor[] getNetworkInterceptors();
+
+    void setOkHttpClient(OkHttpClient.Builder builder);
 
 }

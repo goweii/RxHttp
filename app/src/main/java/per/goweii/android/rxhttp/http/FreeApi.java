@@ -32,6 +32,9 @@ public class FreeApi extends Api {
 
         String BASE_URL_ERROR_NAME = "error";
         String BASE_URL_ERROR = "https://www.apiopen1.top/";
+
+        String BASE_URL_HTTPS_NAME = "https";
+        String BASE_URL_HTTPS = "https://www.baidu.com/";
     }
 
     public interface Service {
@@ -62,5 +65,12 @@ public class FreeApi extends Api {
         @Headers({Header.BASE_URL_REDIRECT + ":" + Config.BASE_URL_ERROR_NAME})
         @GET("weatherApi")
         Observable<ResponseBean<BaseBean>> errorHost();
+
+        /**
+         * https
+         */
+        @Headers({Header.BASE_URL_REDIRECT + ":" + Config.BASE_URL_HTTPS_NAME})
+        @GET("s")
+        Observable<ResponseBean<BaseBean>> https(@Query("wd") String wd);
     }
 }

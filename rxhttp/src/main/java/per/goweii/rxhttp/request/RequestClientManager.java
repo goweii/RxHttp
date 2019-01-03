@@ -118,6 +118,7 @@ class RequestClientManager extends BaseClientManager {
                 builder.addNetworkInterceptor(interceptor);
             }
         }
+        RxHttp.getRequestSetting().setOkHttpClient(builder);
         return builder.build();
     }
 

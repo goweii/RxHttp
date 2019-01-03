@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import java.util.Map;
 
 import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
 import per.goweii.rxhttp.request.exception.ExceptionHandle;
 
 /**
@@ -91,5 +92,9 @@ public abstract class DefaultRequestSetting implements RequestSetting {
     @Override
     public Interceptor[] getNetworkInterceptors() {
         return null;
+    }
+
+    @Override
+    public void setOkHttpClient(OkHttpClient.Builder builder) {
     }
 }
