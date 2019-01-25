@@ -1,15 +1,18 @@
 package per.goweii.rxhttp.request;
 
+import android.text.TextUtils;
+
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
-import per.goweii.rxhttp.BuildConfig;
 import per.goweii.rxhttp.core.RxHttp;
 import per.goweii.rxhttp.core.manager.BaseClientManager;
 import per.goweii.rxhttp.core.utils.BaseUrlUtils;
@@ -32,6 +35,7 @@ class RequestClientManager extends BaseClientManager {
 
     private static RequestClientManager INSTANCE = null;
     private final Retrofit mRetrofit;
+    private Map<Class<?>, Retrofit> mRetrofitMap = null;
 
     private RequestClientManager() {
         mRetrofit = create();
@@ -61,7 +65,47 @@ class RequestClientManager extends BaseClientManager {
      * @return Api接口实例
      */
     static <T> T getService(Class<T> clazz) {
-        return getInstance().mRetrofit.create(clazz);
+        return getInstance().getRetrofit(clazz).create(clazz);
+    }
+
+    private Retrofit getRetrofit(Class<?> clazz) {
+        if (clazz == null) {
+            return mRetrofit;
+        }
+        Retrofit retrofit = null;
+        if (mRetrofitMap != null && mRetrofitMap.size() > 0) {
+            Iterator<Map.Entry<Class<?>, Retrofit>> iterator = mRetrofitMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Class<?>, Retrofit> entry = iterator.next();
+                if (TextUtils.equals(entry.getKey().getName(), clazz.getName())) {
+                    retrofit = entry.getValue();
+                    if (retrofit == null) {
+                        iterator.remove();
+                    }
+                    break;
+                }
+            }
+        }
+        if (retrofit != null) {
+            return retrofit;
+        }
+        Map<Class<?>, String> baseUrlMap = RxHttp.getRequestSetting().getServiceBaseUrl();
+        if (baseUrlMap == null || baseUrlMap.size() == 0) {
+            return mRetrofit;
+        }
+        String baseUrl = null;
+        for (Map.Entry<Class<?>, String> entry : baseUrlMap.entrySet()) {
+            if (TextUtils.equals(entry.getKey().getName(), clazz.getName())) {
+                baseUrl = entry.getValue();
+                break;
+            }
+        }
+        if (baseUrl == null) {
+            return mRetrofit;
+        }
+        retrofit = create(baseUrl);
+        mRetrofitMap.put(clazz, retrofit);
+        return retrofit;
     }
 
     /**
@@ -69,9 +113,16 @@ class RequestClientManager extends BaseClientManager {
      */
     @Override
     protected Retrofit create() {
+        return create(RxHttp.getRequestSetting().getBaseUrl());
+    }
+
+    /**
+     * 创建Retrofit实例
+     */
+    private Retrofit create(String baseUrl) {
         return new Retrofit.Builder()
                 .client(createOkHttpClient())
-                .baseUrl(BaseUrlUtils.checkBaseUrl(RxHttp.getRequestSetting().getBaseUrl()))
+                .baseUrl(BaseUrlUtils.checkBaseUrl(baseUrl))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(new Gson()))
                 .build();
@@ -85,7 +136,7 @@ class RequestClientManager extends BaseClientManager {
     private OkHttpClient createOkHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         // 设置调试模式打印日志
-        if (BuildConfig.DEBUG) {
+        if (RxHttp.getRequestSetting().isDebug()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addInterceptor(logging);

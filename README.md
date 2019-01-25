@@ -274,7 +274,7 @@ RxRequest的配置参数
 
 - 默认的BaseUrl
 
-- #### Map<String, String> getMultiBaseUrl()
+- #### Map<String, String> getRedirectBaseUrl()
 
   其他用于重定向的BaseUrl，Map的Key值为添加重定向Header的Value值，Map的Value值为BaseUrl
 

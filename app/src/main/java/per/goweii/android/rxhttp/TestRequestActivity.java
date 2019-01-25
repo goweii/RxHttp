@@ -46,7 +46,7 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public Map<String, String> getMultiBaseUrl() {
+            public Map<String, String> getRedirectBaseUrl() {
                 Map<String, String> urls = new HashMap<>(2);
                 urls.put(FreeApi.Config.BASE_URL_OTHER_NAME, FreeApi.Config.BASE_URL_OTHER);
                 urls.put(FreeApi.Config.BASE_URL_ERROR_NAME, FreeApi.Config.BASE_URL_ERROR);

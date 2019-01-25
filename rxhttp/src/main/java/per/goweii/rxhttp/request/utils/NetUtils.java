@@ -22,7 +22,7 @@ public class NetUtils {
         if (connectivityManager != null) {
             NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
             if (networkInfo != null) {
-                return networkInfo.isConnected();
+                return networkInfo.isAvailable();
             }
         }
         return false;

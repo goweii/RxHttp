@@ -15,7 +15,7 @@ public class Api {
     public interface Header {
         /**
          * 添加以这个为名的Header可以让这个Request使用另一个BaseUrl
-         * {@link RequestSetting#getMultiBaseUrl()}
+         * {@link RequestSetting#getRedirectBaseUrl()}
          */
         String BASE_URL_REDIRECT = "RxHttp-BaseUrl-Redirect";
         /**

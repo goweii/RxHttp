@@ -16,16 +16,16 @@ import okhttp3.RequestBody;
  * @author Cuizhen
  * @date 2018/9/4
  */
-public class ParameterUtils {
+public class RequestBodyUtils {
 
-    private ParameterUtils() {
+    private RequestBodyUtils() {
     }
 
-    public static ParameterUtils.Builder builder() {
-        return new ParameterUtils.Builder();
+    public static RequestBodyUtils.Builder builder() {
+        return new RequestBodyUtils.Builder();
     }
 
-    public static Map<String, RequestBody> create(String key, File value) {
+    public static <T> Map<String, RequestBody> create(String key, T value) {
         return builder().add(key, value).build();
     }
 

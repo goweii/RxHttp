@@ -27,7 +27,7 @@ import per.goweii.rxhttp.request.utils.NonNullUtils;
 public class BaseUrlRedirectInterceptor implements Interceptor {
 
     public static void addTo(@NonNull OkHttpClient.Builder builder) {
-        Map<String, String> urls = RxHttp.getRequestSetting().getMultiBaseUrl();
+        Map<String, String> urls = RxHttp.getRequestSetting().getRedirectBaseUrl();
         if (NonNullUtils.check(urls)) {
             builder.addInterceptor(new BaseUrlRedirectInterceptor());
         }
@@ -39,7 +39,7 @@ public class BaseUrlRedirectInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request original = chain.request();
-        Map<String, String> urls = RxHttp.getRequestSetting().getMultiBaseUrl();
+        Map<String, String> urls = RxHttp.getRequestSetting().getRedirectBaseUrl();
         if (!NonNullUtils.check(urls)) {
             return chain.proceed(original);
         }

@@ -19,13 +19,14 @@ public abstract class DefaultRequestSetting implements RequestSetting {
 
     @Nullable
     @Override
-    public Map<String, String> getMultiBaseUrl() {
+    public Map<String, String> getRedirectBaseUrl() {
         return null;
     }
 
+    @Nullable
     @Override
-    public int getSuccessCode() {
-        return 200;
+    public Map<Class<?>, String> getServiceBaseUrl() {
+        return null;
     }
 
     @Override
@@ -96,5 +97,10 @@ public abstract class DefaultRequestSetting implements RequestSetting {
 
     @Override
     public void setOkHttpClient(OkHttpClient.Builder builder) {
+    }
+
+    @Override
+    public boolean isDebug() {
+        return false;
     }
 }

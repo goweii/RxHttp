@@ -9,19 +9,19 @@ import org.json.JSONObject;
  * @author Cuizhen
  * @date 2018/10/8
  */
-public class JsonFieldUtils {
+public class JsonObjUtils {
 
     private final JSONObject mJsonObject;
 
-    private JsonFieldUtils() {
+    private JsonObjUtils() {
         mJsonObject = new JSONObject();
     }
 
-    public static JsonFieldUtils newInstance() {
-        return new JsonFieldUtils();
+    public static JsonObjUtils create() {
+        return new JsonObjUtils();
     }
 
-    public JsonFieldUtils add(String key, int value) {
+    public JsonObjUtils add(String key, int value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
@@ -30,7 +30,7 @@ public class JsonFieldUtils {
         return this;
     }
 
-    public JsonFieldUtils add(String key, float value) {
+    public JsonObjUtils add(String key, float value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
@@ -39,7 +39,7 @@ public class JsonFieldUtils {
         return this;
     }
 
-    public JsonFieldUtils add(String key, double value) {
+    public JsonObjUtils add(String key, double value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
@@ -48,7 +48,7 @@ public class JsonFieldUtils {
         return this;
     }
 
-    public JsonFieldUtils add(String key, boolean value) {
+    public JsonObjUtils add(String key, boolean value) {
         try {
             mJsonObject.put(key, value ? 1 : 0);
         } catch (JSONException e) {
@@ -57,13 +57,17 @@ public class JsonFieldUtils {
         return this;
     }
 
-    public JsonFieldUtils add(String key, String value) {
+    public JsonObjUtils add(String key, String value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return this;
+    }
+
+    public JSONObject get() {
+        return mJsonObject;
     }
 
     public String toJson() {
