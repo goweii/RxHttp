@@ -109,8 +109,28 @@ public interface RequestSetting {
     @Nullable
     Interceptor[] getNetworkInterceptors();
 
+    /**
+     * 忽略HTTPS的证书验证
+     * 仅在后台未正确配置且着急调试时可临时置为true
+     *
+     * @return 建议为false
+     */
+    boolean ignoreSslForHttps();
+
+    /**
+     * android4.4及以下版本默认未开启Tls1.2
+     * 返回true则强制开启
+     */
+    boolean enableTls12BelowAndroidKitkat();
+
+    /**
+     * 在创建OkHttpClient之前调用，及框架完成所有配置后
+     */
     void setOkHttpClient(OkHttpClient.Builder builder);
 
+    /**
+     * 是否打开调试模式
+     */
     boolean isDebug();
 
 }

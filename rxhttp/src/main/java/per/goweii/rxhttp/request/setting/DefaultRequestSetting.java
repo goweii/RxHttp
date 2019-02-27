@@ -108,6 +108,16 @@ public abstract class DefaultRequestSetting implements RequestSetting {
     }
 
     @Override
+    public boolean ignoreSslForHttps() {
+        return false;
+    }
+
+    @Override
+    public boolean enableTls12BelowAndroidKitkat() {
+        return true;
+    }
+
+    @Override
     public void setOkHttpClient(OkHttpClient.Builder builder) {
     }
 
