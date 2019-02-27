@@ -79,6 +79,18 @@ public abstract class DefaultRequestSetting implements RequestSetting {
 
     @Nullable
     @Override
+    public Map<String, String> getStaticHeaderParameter() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public Map<String, ParameterGetter> getDynamicHeaderParameter() {
+        return null;
+    }
+
+    @Nullable
+    @Override
     public <E extends ExceptionHandle> E getExceptionHandle() {
         return null;
     }

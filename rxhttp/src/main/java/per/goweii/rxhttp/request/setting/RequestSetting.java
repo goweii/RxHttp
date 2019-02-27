@@ -95,6 +95,12 @@ public interface RequestSetting {
     Map<String, ParameterGetter> getDynamicPublicQueryParameter();
 
     @Nullable
+    Map<String, String> getStaticHeaderParameter();
+
+    @Nullable
+    Map<String, ParameterGetter> getDynamicHeaderParameter();
+
+    @Nullable
     <E extends ExceptionHandle> E getExceptionHandle();
 
     @Nullable

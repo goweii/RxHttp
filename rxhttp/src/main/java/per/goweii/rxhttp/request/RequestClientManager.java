@@ -20,6 +20,7 @@ import per.goweii.rxhttp.core.utils.SDCardUtils;
 import per.goweii.rxhttp.request.interceptor.BaseUrlRedirectInterceptor;
 import per.goweii.rxhttp.request.interceptor.CacheControlInterceptor;
 import per.goweii.rxhttp.request.interceptor.CacheControlNetworkInterceptor;
+import per.goweii.rxhttp.request.interceptor.PublicHeadersInterceptor;
 import per.goweii.rxhttp.request.interceptor.PublicQueryParameterInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -153,6 +154,7 @@ class RequestClientManager extends BaseClientManager {
         builder.writeTimeout(writeTimeout > 0 ? writeTimeout : timeout, TimeUnit.MILLISECONDS);
         // 设置应用层拦截器
         BaseUrlRedirectInterceptor.addTo(builder);
+        PublicHeadersInterceptor.addTo(builder);
         PublicQueryParameterInterceptor.addTo(builder);
         CacheControlInterceptor.addTo(builder);
         Interceptor[] interceptors = RxHttp.getRequestSetting().getInterceptors();
