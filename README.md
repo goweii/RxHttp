@@ -43,9 +43,11 @@
 
    最新版本是多少，看下[Releases](https://github.com/goweii/RxHttp/releases)
 
+   从2.2.9版本开始，版本号前不加v，引用时需要注意。
+
    ```java
    dependencies {
-   	api 'com.github.goweii:RxHttp:最新版本号'
+   	api 'com.github.goweii:RxHttp:2.2.9'
    }
    ```
 
