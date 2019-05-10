@@ -121,12 +121,16 @@ class RequestClientManager extends BaseClientManager {
      * 创建Retrofit实例
      */
     private Retrofit create(String baseUrl) {
-        return new Retrofit.Builder()
+        Retrofit.Builder builder = new Retrofit.Builder()
                 .client(createOkHttpClient())
-                .baseUrl(BaseUrlUtils.checkBaseUrl(baseUrl))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create(new Gson()))
-                .build();
+                .baseUrl(BaseUrlUtils.checkBaseUrl(baseUrl));
+        builder.addCallAdapterFactory(RxJava2CallAdapterFactory.create());
+        Gson gson = RxHttp.getRequestSetting().getGson();
+        if (gson == null) {
+            gson = new Gson();
+        }
+        builder.addConverterFactory(GsonConverterFactory.create(gson));
+        return builder.build();
     }
 
     /**

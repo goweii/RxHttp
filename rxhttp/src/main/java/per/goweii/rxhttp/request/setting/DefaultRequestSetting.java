@@ -3,6 +3,8 @@ package per.goweii.rxhttp.request.setting;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.Gson;
+
 import java.util.Map;
 
 import okhttp3.Interceptor;
@@ -119,6 +121,12 @@ public abstract class DefaultRequestSetting implements RequestSetting {
 
     @Override
     public void setOkHttpClient(OkHttpClient.Builder builder) {
+    }
+
+    @Nullable
+    @Override
+    public Gson getGson() {
+        return null;
     }
 
     @Override

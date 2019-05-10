@@ -4,6 +4,8 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.Gson;
+
 import java.util.Map;
 
 import okhttp3.Interceptor;
@@ -127,6 +129,12 @@ public interface RequestSetting {
      * 在创建OkHttpClient之前调用，及框架完成所有配置后
      */
     void setOkHttpClient(OkHttpClient.Builder builder);
+
+    /**
+     * 在创建OkHttpClient之前调用，及框架完成所有配置后
+     */
+    @Nullable
+    Gson getGson();
 
     /**
      * 是否打开调试模式
