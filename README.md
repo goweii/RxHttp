@@ -26,67 +26,177 @@
 
 
 
-# 集成方式
-
-1. 在Project的**build.gradle**添加仓库地址
-
-   ```java
-   allprojects {
-   	repositories {
-   		...
-   		maven { url 'https://www.jitpack.io' }
-   	}
-   }
-   ```
-
-2. 在Model:app的**build.gradle**添加框架依赖
-
-   最新版本是多少，看下[Releases](https://github.com/goweii/RxHttp/releases)
-
-   从2.2.9版本开始，版本号前不加v，引用时需要注意。
-
-   ```java
-   dependencies {
-   	api 'com.github.goweii:RxHttp:2.2.9'
-   }
-   ```
-
-
 
 # 发起请求之RxRequest
 
-## 使用方法
+## 使用说明
 
-### 初始化
+### 一、初始化
 
-初始化操作可在Application中也可在应用启动页中进行
+1. 新建网络请求配置类继承RequestSetting或DefaultRequestSetting，并复写部分方法。
+
+```java
+public class RxHttpRequestSetting extends DefaultRequestSetting {
+
+    @NonNull
+    @Override
+    public String getBaseUrl() {
+        return Config.BASE_URL;
+    }
+
+    @Override
+    public int getSuccessCode() {
+        return 200;
+    }
+}
+```
+
+2. 在Application中初始化并传入配置类实例
 
 ```java
 RxHttp.init(this);
-RxHttp.initRequest(new DefaultRequestSetting() {
-            @Override
-            public String getBaseUrl() {
-                return Config.BASE_URL;
-            }
-
-            @Override
-            public int getSuccessCode() {
-                return 200;
-            }
-        });
+RxHttp.initRequest(new RxHttpRequestSetting());
 ```
 
-### 定义响应体结构
+### 二、定义公共请求头拦截器
 
-定义ResponseBean< E>继承BaseResponse< E>，定义成员变量并实现方法。
+```java
+public class PublicHeadersInterceptor implements Interceptor {
+    private static String TIME = "";
+    private static String TOKEN = "";
+
+    public static void updateTime(String time) {
+        PublicHeadersInterceptor.TIME = time;
+    }
+
+    public static void updateToken(String token) {
+        PublicHeadersInterceptor.TOKEN = token;
+    }
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request request = chain.request();
+        request = request.newBuilder()
+                .header(Constant.PUBLIC_HEADER_TIME_NAME, TIME)
+                .header(Constant.PUBLIC_HEADER_SIGN_NAME, getSign(request))
+                .build();
+        return chain.proceed(request);
+    }
+
+    private String getSign(Request request){
+        return MD5Coder.encode(request.url().url().toString() + "?token=" + TOKEN);
+    }
+}
+```
+
+### 三、定义公共参数拦截器
+
+```java
+public class PublicParamsInterceptor implements Interceptor {
+    private static final String GET = "GET";
+    private static final String POST = "POST";
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request request = chain.request();
+        String method = request.method();
+        if (TextUtils.equals(method, GET)) {
+            request = addForGet(request);
+        } else if (TextUtils.equals(method, POST)) {
+            request = addForPost(request);
+        }
+        return chain.proceed(request);
+    }
+
+    private Request addForGet(Request request) {
+        List<Param> params = getPublicParams();
+        HttpUrl httpUrl = request.url();
+        HttpUrl.Builder httpUrlBuilder = httpUrl.newBuilder();
+        for (int i = 0; i < httpUrl.querySize(); i++) {
+            String name = httpUrl.queryParameterName(i);
+            String value = httpUrl.queryParameterValue(i);
+            params.add(new Param(name, value));
+            httpUrlBuilder.removeAllQueryParameters(name);
+        }
+        JsonObjUtils json = JsonObjUtils.create();
+        for (Param param : params) {
+            json.add(param.getKey(), param.getValue());
+        }
+        LogUtils.i("PublicParamsInterceptor", "data=" + json.toJson());
+        httpUrlBuilder.setQueryParameter(Constant.PUBLIC_PARAM_KEY, json.toJson());
+        return request.newBuilder()
+                .url(httpUrlBuilder.build())
+                .build();
+    }
+
+    private Request addForPost(Request request) {
+        RequestBody requestBody = request.body();
+        if (requestBody == null) {
+            return request;
+        } else if (requestBody instanceof FormBody) {
+            List<Param> params = getPublicParams();
+            FormBody formBody = (FormBody) requestBody;
+            for (int i = 0; i < formBody.size(); i++) {
+                params.add(new Param(formBody.name(i), formBody.value(i)));
+            }
+            JsonObjUtils json = JsonObjUtils.create();
+            for (Param param : params) {
+                json.add(param.getKey(), param.getValue());
+            }
+            LogUtils.i("PublicParamsInterceptor", "data=" + json.toJson());
+            FormBody.Builder formBodyBuilder = new FormBody.Builder()
+                    .add(Constant.PUBLIC_PARAM_KEY, json.toJson());
+            return request.newBuilder()
+                    .post(formBodyBuilder.build())
+                    .build();
+        } else if (requestBody instanceof MultipartBody) {
+            return request;
+        } else {
+            try {
+                if (requestBody.contentLength() == 0) {
+                    List<Param> params = getPublicParams();
+                    JsonObjUtils json = JsonObjUtils.create();
+                    for (Param param : params) {
+                        json.add(param.getKey(), param.getValue());
+                    }
+                    LogUtils.i("PublicParamsInterceptor", "data=" + json.toJson());
+                    FormBody.Builder formBodyBuilder = new FormBody.Builder()
+                            .add(Constant.PUBLIC_PARAM_KEY, json.toJson());
+                    return request.newBuilder()
+                            .post(formBodyBuilder.build())
+                            .build();
+                } else {
+                    return request;
+                }
+            } catch (IOException e) {
+                return request;
+            }
+        }
+    }
+
+    private List<Param> getPublicParams() {
+        List<Param> params = new ArrayList<>();
+        params.add(new Param(Constant.PUBLIC_PARAM_SYSTEM_KEY, Constant.PUBLIC_PARAM_SYSTEM_VALUE));
+        params.add(new Param(Constant.PUBLIC_PARAM_VERSION_KEY, String.valueOf(AppInfoUtils.getVersionCode())));
+        params.add(new Param(Constant.PUBLIC_PARAM_USER_ID_KEY, UserUtils.getInstance().getUserId()));
+        params.add(new Param(Constant.PUBLIC_PARAM_USER_DEVICE_KEY, DeviceIdUtils.getId()));
+        params.add(new Param(Constant.PUBLIC_PARAM_JPUSH_DEVICE_KEY, JPushHelper.getId()));
+        return params;
+    }
+}
+```
+
+### 四、定义响应体结构
+
+定义ResponseBean< E >继承BaseResponse< E >，定义成员变量并实现方法。
 
 ```java
 public class ResponseBean<E> implements BaseResponse<E> {
-    @SerializedName(value = "code", alternate = {"status"})
+    @SerializedName(value = "code"/*, alternate = {"status"}*/)
     private int code;
-    @SerializedName(value = "data", alternate = {"result"})
+    @SerializedName(value = "data"/*, alternate = {"result"}*/)
     private E data;
-    @SerializedName(value = "msg", alternate = {"message"})
+    @SerializedName(value = "msg"/*, alternate = {"message"}*/)
     private String msg;
 
     @Override
@@ -121,11 +231,20 @@ public class ResponseBean<E> implements BaseResponse<E> {
 }
 ```
 
-### 定义接口数据结构
+### 五、定义接口数据结构
 
 ```java
 public class TimeBean extends BaseBean {
+    private String token;
     private String time;
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 
     public String getTime() {
         return time;
@@ -137,10 +256,10 @@ public class TimeBean extends BaseBean {
 }
 ```
 
-### 定义Api接口类
+### 六、定义Api接口类
 
 1. 新建子类继承自Api
-2. 定义一个内部类Service声明请求（即Retrifit的CategoryService）
+2. 定义一个内部类Service声明请求
 3. 定义静态无参方法返回Api.api(Service.class)创建Api实例
 
 ```java
@@ -150,12 +269,34 @@ public class FreeApi extends Api {
         return Api.api(Service.class);
     }
 
-    public interface Code{
-        int SUCCESS = 200;
+    public interface Config {
+        String BASE_URL = Config.HTTP_HOST + Config.HTTP_VERSION;
+        long HTTP_TIMEOUT = 5000;
     }
 
-    public interface Config {
-        String BASE_URL = "http://api.apiopen.top/";
+    public interface Code{
+        int TIME_OUT = 1000;                     // 请求延迟
+        int REQUEST_ERROR = 1001;                // 请求方式错误
+        int ILLEGAL_PARAMETER = 1002;            // 非法参数
+
+        int SUCCESS = 2000;                      // 获取信息成功
+        int SUCCESS_OLD = 104;                   // 获取信息成功 老版本的
+        int SUCCESS_NO_DATA = 2001;              // 暂无相关数据
+
+        int FAILED = 3000;                       // 获取信息失败
+        int PHONE_EXIST = 3001;                  // 该手机号已注册过
+        int PASSWARD_ERROR = 3002;               // 密码错误
+        int PHONE_ILLEGAL = 3003;                // 手机号不合法
+        int PHONE_NOT_BIND = 3004;               // 请绑定手机号
+        int PHONE_NOT_REGIST = 3005;             // 该手机号未注册
+        
+        int ACCOUNT_NOT_EXIST = 4001;            // 账号不存在
+        int ACCOUNT_EXCEPTION = 4002;            // 账号异常,请重新登录
+        int ACCOUNT_FROZEN = 4003;               // 该账户已被冻结,请联系管理员
+        int ACCOUNT_DELETED = 4004;              // 该账户已被管理员删除
+
+        int ERROR = 5000;                        // 访问异常
+        int ERROR_NET = 5001;                    // 网络异常
     }
 
     public interface Service {
@@ -165,7 +306,118 @@ public class FreeApi extends Api {
 }
 ```
 
-### 发起请求
+### 七、定义请求回调
+
+````java
+public interface RequestBackListener<T> {
+    void onStart();
+    void onSuccess(int code, T data);
+    void onFailed(int code, String msg);
+    void onNoNet();
+    void onError(Throwable e);
+    void onFinish();
+}
+````
+
+### 八、封装BaseRequest基类
+
+封装签名的获取和响应回调的处理逻辑。
+
+在调用正式接口之前，我们可能需要先调用一个获取时间戳的接口，将时间戳接口返回的时间戳和签名字段添加到正式接口的公共参数或请求头中，才能发起正式请求。所以在该基类中进行封装，抽取公共代码。
+
+如果时间戳接口返回了版本更新字段，需要版本号等判断请求的执行流程，如强制更新且不需要继续执行正式接口，可在此处自行处理。
+
+```java
+public class BaseRequest {
+    protected static <T> Disposable requestWithSign(@NonNull RequestCallback<T> observable, @NonNull RequestBackListener<T> callback) {
+        return request(ProjectApi.api().getTime()
+                .flatMap(new Function<ResponseBean<TimeBean>, ObservableSource<ResponseBean<T>>>() {
+                    @Override
+                    public Observable<ResponseBean<T>> apply(ResponseBean<TimeBean> bean) {
+                        PublicHeadersInterceptor.updateTime(bean.getData().getTime());
+                        PublicHeadersInterceptor.updateToken(bean.getData().getToken());
+                        return observable.request().subscribeOn(Schedulers.io());
+                    }
+                }), callback);
+    }
+
+    protected static <T> Disposable request(@NonNull Observable<ResponseBean<T>> observable, @NonNull RequestBackListener<T> callback) {
+        return RxRequest.create(observable)
+                .listener(new RxRequest.RequestListener() {
+                    @Override
+                    public void onStart() {
+                        callback.onStart();
+                    }
+
+                    @Override
+                    public void onError(ExceptionHandle handle) {
+                        handle.getException().printStackTrace();
+                        if (handle.getCode() == ExceptionHandle.Code.NET) {
+                            ToastMaker.showShort(R.string.http_no_net);
+                            callback.onNoNet();
+                            callback.onFailed(ProjectApi.Code.ERROR_NET, ResUtils.getString(R.string.http_no_net));
+                        } else {
+                            callback.onError(handle.getException());
+                            callback.onFailed(ProjectApi.Code.ERROR, ResUtils.getString(R.string.http_error));
+                        }
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        callback.onFinish();
+                    }
+                })
+                .request(new RxRequest.ResultCallback<T>() {
+                    @Override
+                    public void onSuccess(int code, T data) {
+                        callback.onSuccess(code, data);
+                    }
+
+                    @Override
+                    public void onFailed(int code, String msg) {
+                        if (code == ProjectApi.Code.ACCOUNT_NOT_EXIST ||
+                                code == ProjectApi.Code.ACCOUNT_EXCEPTION ||
+                                code == ProjectApi.Code.ACCOUNT_FROZEN ||
+                                code == ProjectApi.Code.ACCOUNT_DELETED) {
+                            ForceOfflineReceiver.send(code, msg);
+                        }
+                        callback.onFailed(code, msg);
+                    }
+                });
+    }
+
+    protected interface RequestCallback<T> {
+        Observable<ResponseBean<T>> request();
+    }
+}
+```
+
+### 九、新建请求类
+
+```java
+public class PublicRequest extends BaseRequest {
+    /**
+     * 获取系统时间
+     */
+    public static Disposable getTime(final RequestBackListener<TimeBean> listener) {
+        return request(ProjectApi.api().getTime(), listener);
+    }
+
+    /**
+     * 获取反馈类型
+     */
+    public static Disposable other(final RequestBackListener<OtherBean> listener) {
+        return requestWithSign(new RequestCallback<OtherAean>() {
+            @Override
+            public Observable<ResponseBean<OtherBean>> request() {
+                return ProjectApi.api().otherApi();
+            }
+        }, listener);
+    }
+}
+```
+
+### 十、发起请求
 
 你可以在Activity或者Fragment中发起请求，也可以在你的Presenter层中发起请求，只需要注意请求生命周期的管理。
 
@@ -173,288 +425,414 @@ public class FreeApi extends Api {
 
 1. 在onCreate方法中（如果是Presenter中使用应该在其绑定到视图时）调用RxLife.create()方法，该方法会返回一个RxLife实例mRxLife。
 2. 在onDestroy方法中（如果是Presenter中使用应该在其从视图解除绑定时）调用mRxLife.destroy()方法，该方法会自动中断所有未完成的请求，防止内存泄漏。
-3. 调用RxHttp.request(Observable)或者RxRequest.create(Observable)方法发起一个请求，会返回一个Disposable对象，调用mRxLife.add(Disposable)添加至管理队列。
+3. 发起一个请求，并调用mRxLife.add(Disposable)添加至管理队列。
+
+**下面将以MVP模式进行举例说明。**
+
+1. 在P层基类中添加RxLife的创建和销毁，并提供addToRxLife方法。
 
 ```java
-private RxLife mRxLife;
+public abstract class MvpPresenter<V extends MvpView> {
+    protected Context context;
+    private V baseView;
+    private RxLife rxLife;
 
-@Override
-protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_test_request);
-    mRxLife = RxLife.create();
-}
+    void onCreate(V baseView) {
+        this.baseView = baseView;
+        context = baseView.getContext();
+        rxLife = RxLife.create();
+    }
 
-@Override
-protected void onDestroy() {
-    super.onDestroy();
-    mRxLife.destroy();
-}
+    void onDestroy() {
+        baseView = null;
+        context = null;
+        rxLife.destroy();
+        rxLife = null;
+    }
 
-private void getTime() {
-    mRxLife.add(RxHttp.request(FreeApi.api().getTime()).listener(new RxRequest.RequestListener() {
-        private long timeStart = 0;
+    public RxLife getRxLife() {
+        return rxLife;
+    }
 
-        @Override
-        public void onStart() {
-            log(null);
-            log("onStart()");
-            timeStart = System.currentTimeMillis();
+    public void addToRxLife(Disposable disposable) {
+        if (rxLife != null) {
+            rxLife.add(disposable);
         }
+    }
 
-        @Override
-        public void onError(ExceptionHandle handle) {
-            log("onError(" + handle.getMsg() + ")");
-        }
+    public V getBaseView() {
+        return baseView;
+    }
 
-        @Override
-        public void onFinish() {
-            long cast = System.currentTimeMillis() - timeStart;
-            log("onFinish(cast=" + cast + ")");
-        }
-    }).request(new RxRequest.ResultCallback<TimeBean>() {
-        @Override
-        public void onSuccess(int code, TimeBean data) {
-            log("onSuccess(code=" + code + ",data=" + data.toFormatJson() + ")");
-        }
+    public boolean isAttachView() {
+        return baseView != null;
+    }
 
-        @Override
-        public void onFailed(int code, String msg) {
-            log("onFailed(code=" + code + ",msg=" + msg + ")");
-        }
-    }));
+    public Context getContext() {
+        return context;
+    }
 }
 ```
 
-## 常用类说明
-
-### RxHttp
-
-用于初始化和设置
-
-- #### init(Context)
-
-  初始化RxHttp，建议在自定义Application中进行
-
-- #### initRequest(RequestSetting)
-
-  初始化RxRequest，建议在自定义Application中进行
-
-- #### initDownload(DownloadSetting)
-
-  初始化RxDownload，建议在自定义Application中进行
-
-- #### request(Observable< R> )
-
-  发起一个请求，同RxRequest.request(Observable< R> )方法
-
-- #### download(String)
-
-  新建一个下载任务，同RxDownload.create(String)方法
-
-### RxLife
-
-用于管理请求的生命周期，防止内存泄露。
-
-- #### RxLife create()
-
-  在页面的onCreate方法调用，会返回一个RxLife实例
-
-- #### destroy()
-
-  在页面的onDestroy方法调用，终止所有未完成的请求
-
-- #### add(Disposable)
-
-  当调用RxHttp.request(Observable)或者RxRequest.create(Observable)方法发起一个请求时，会返回一个Disposable对象，调用该方法将其添加至管理队列
-
-### RequestSetting/DefaultRequestSetting
-
-RxRequest的配置参数
-
-- #### String getBaseUrl()
-
-- 默认的BaseUrl
-
-- #### Map<String, String> getRedirectBaseUrl()
-
-  其他用于重定向的BaseUrl，Map的Key值为添加重定向Header的Value值，Map的Value值为BaseUrl
-
-- #### int getSuccessCode()
-
-  请求成功后服务器返回的成功Code值
-
-- #### int[] getMultiSuccessCode()
-
-  请求成功后服务器返回的其他成功Code值
-
-- #### long getTimeout()
-
-  默认超时时长，单位毫秒
-
-- #### long getConnectTimeout()
-
-  设置0则取getTimeout()，单位毫秒
-
-- #### long getReadTimeout()
-
-  设置0则取getTimeout()，单位毫秒
-
-- #### long getWriteTimeout()
-
-  设置0则取getTimeout()，单位毫秒
-
-- #### String getCacheDirName()
-
-  缓存文件夹名
-
-- #### long getCacheSize()
-
-  缓存大小
-
-- #### Map<String, String> getStaticPublicQueryParameter()
-
-  拼接在url后面的公共请求参数，静态字符串，如版本号等
-
-- #### Map<String, ParameterGetter> getDynamicPublicQueryParameter()
-
-  拼接在url后面的公共请求参数，需要动态获取的，如用户名等
-
-- #### < E extends ExceptionHandle> E getExceptionHandle()
-
-  获取自定义异常处理器
-
-- #### Interceptor[] getInterceptors()
-
-  添加自定义拦截器
-
-- #### Interceptor[] getNetworkInterceptors()
-
-  添加自定义拦截器
-
-### BaseResponse< E>
-
-服务器响应体数据结构，可自定义字段名
-
-- #### int getCode();
-
-- #### void setCode(int);
-
-- #### E getData();
-
-- #### void setData(E);
-
-- #### String getMsg();
-
-- #### void setMsg(Stringg);
-
-### BaseBean
-
-响应体Data的数据结构，建议继承自这个类，实现了Serializable接口，提供toJson方法
-
-- #### toJson()
-
-  转为Json字符串
-
-- #### toFormatJson()
-
-  转为格式化后的Json字符串，及花括号换行加缩进
-
-### ExceptionHandle
-
-处理请求过程中的异常，可通过继承自定义。
-
-- #### onGetCode(Throwable)
-
-  重写该方法去返回异常对应的错误码
-
-- #### onGetMsg(int)
-
-  重写该方法去返回错误码对应的错误信息
-
-### Api
-
-强烈建议创建Api实例的类继承自该类。可在其中定义内部类接口管理常量数据，如：
+2. 新建P层，发起请求。
 
 ```java
-public class FreeApi extends Api {
+public class OtherPresenter extends MvpPresenter<FeedbackView> {
+    public void other() {
+        addToRxLife(PublicRequest.other(new RequestBackListener<OtherBean>() {
+            @Override
+            public void onStart() {
+                showLoading();
+            }
+
+            @Override
+            public void onSuccess(int code, OtherBean data) {
+                if (isAttachView()) {
+                    getBaseView().otherSuccess(code, data);
+                }
+            }
+
+            @Override
+            public void onFailed(int code, String msg) {
+                if (isAttachView()) {
+                    getBaseView().otherFail(code, msg);
+                }
+            }
+
+            @Override
+            public void onNoNet() {
+            }
+
+            @Override
+            public void onError(Throwable e) {
+            }
+
+            @Override
+            public void onFinish() {
+                dismissLoading();
+            }
+        }));
+    }
+}
+```
+
+3. 新建V层接口，并在Activity或Fragment实现接口回调，进行数据展示。
+
+```java
+public interface OtherView extends MvpView {
+    void otherSuccess(int code, OtherBean data);
+    void otherFail(int code, String msg);
+}
+```
+
+
+
+## API
+
+### JsonObjUtils
+
+创建JSONObject对象并生成Json字符串。
+
+### RequestBodyUtils
+
+创建RequestBody，针对POST请求。
+
+如图片上传接口
+
+```java
+/**
+ * 键		值
+ * img		File
+ * content	String
+ */
+@Multipart
+@POST("public/img")
+Observable<ResponseBean<UploadImgBean>> uploadImg(@PartMap Map<String, RequestBody> img);
+```
+
+发起请求如下
+
+```java
+public static Disposable uploadImg(String content, File imgFile, final RequestBackListener<UploadImgBean> listener) {
+    return requestWithSign(new RequestCallback<UploadImgBean>() {
+        @Override
+        public Observable<ResponseBean<UploadImgBean>> request() {
+            Map<String, RequestBody> map = RequestBodyUtils.builder()
+                .add("content", content)
+                .add("img", imgFile)
+                .build();
+            return ProjectApi.api().uploadImg(map);
+        }
+    }, listener);
+}
+```
+
+### HttpsCompat
+
+主要提供7个静态方法，用于实现证书忽略和开启Android4.4及以下对TLS1.2的支持。
+
+```java
+/**
+ * 忽略证书的验证，这样请求就和HTTP一样，失去了安全保障，不建议使用
+ */
+public static void ignoreSSLForOkHttp(OkHttpClient.Builder builder)
     
-	// 定义静态无参方法创建ApiService实例
-    public static Service api() {
-        return Api.api(Service.class);
+/**
+ * 开启HttpsURLConnection对TLS1.2的支持
+ */
+public static void enableTls12ForOkHttp(OkHttpClient.Builder builder)
+    
+/**
+ * 忽略证书的验证，这样请求就和HTTP一样，失去了安全保障，不建议使用
+ * 应在使用HttpsURLConnection之前调用，建议在application中
+ */
+public static void ignoreSSLForHttpsURLConnection()
+    
+/**
+ * 开启HttpsURLConnection对TLS1.2的支持
+ * 应在使用HttpsURLConnection之前调用，建议在application中
+ */
+public static void enableTls12ForHttpsURLConnection()
+    
+/**
+ * 获取开启TLS1.2的SSLSocketFactory
+ * 建议在android4.4及以下版本调用
+ */
+public static SSLSocketFactory getEnableTls12SSLSocketFactory()
+    
+/**
+ * 获取忽略证书的HostnameVerifier
+ * 与{@link #getIgnoreSSLSocketFactory()}同时配置使用
+ */
+public static HostnameVerifier getIgnoreHostnameVerifier()
+    
+/**
+ * 获取忽略证书的SSLSocketFactory
+ * 与{@link #getIgnoreHostnameVerifier()}同时配置使用
+ */
+public static SSLSocketFactory getIgnoreSSLSocketFactory()
+```
+
+
+
+## 常见问题
+
+### 在Android9.0及以上系统HTTP请求无响应
+
+官方资料在框架安全性变更提及，如果应用以 Android 9 或更高版本为目标平台则默认情况下启用网络传输层安全协议 (TLS)，即 isCleartextTrafficPermitted() 函数返回 false。 如果您的应用需要为特定域名启用明文，您必须在应用的网络安全性配置中针对这些域名将 cleartextTrafficPermitted 显式设置为 true。
+
+因此解决办法有2种：
+
+第一种，启用HTTP，允许明文传输（不建议采用）
+
+1. 在资源文件夹res/xml下面创建network_security_config.xml
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
+```
+
+2. 在清单文件AndroidManifest.xml的application标签里面设置networkSecurityConfig属性引用。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest ... >
+    <application
+        android:networkSecurityConfig="@xml/network_security_config">
+    </application>
+</manifest>
+```
+
+第二种，所有接口采用HTTPS协议（建议采用）
+
+此方法需确保后台正确配置，如配置后仍有无法访问，且提示证书异常，请检查后台配置。
+
+### HTTPS请求访问时提示证书异常
+
+该情况一般为后台未正确配置证书。请检查后台配置。
+
+在测试时，我们可以暂时选择忽略证书，这样请求就和HTTP一样，但会失去安全保障，不允许在正式发布时使用。
+
+**可直接使用HttpsCompat工具类。**
+
+实现代码如下：
+
+```java
+public static void ignoreSSLForOkHttp(OkHttpClient.Builder builder) {
+    builder.hostnameVerifier(getIgnoreHostnameVerifier())
+            .sslSocketFactory(getIgnoreSSLSocketFactory());
+}
+
+public static void ignoreSSLForHttpsURLConnection() {
+    HttpsURLConnection.setDefaultHostnameVerifier(getIgnoreHostnameVerifier());
+    HttpsURLConnection.setDefaultSSLSocketFactory(getIgnoreSSLSocketFactory());
+}
+
+/**
+ * 获取忽略证书的HostnameVerifier
+ * 与{@link #getIgnoreSSLSocketFactory()}同时配置使用
+ */
+private static HostnameVerifier getIgnoreHostnameVerifier() {
+    return new HostnameVerifier() {
+        @Override
+        public boolean verify(String s, SSLSession sslSession) {
+            return true;
+        }
+    };
+}
+
+/**
+ * 获取忽略证书的SSLSocketFactory
+ * 与{@link #getIgnoreHostnameVerifier()}同时配置使用
+ */
+private static SSLSocketFactory getIgnoreSSLSocketFactory() {
+    try {
+        SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, getTrustManager(), new SecureRandom());
+        return sslContext.getSocketFactory();
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+}
+
+private static TrustManager[] getTrustManager() {
+    return new TrustManager[]{
+        new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[]{};
+            }
+        }
+    };
+}
+```
+
+### HTTPS请求在Android4.4及以下无法访问
+
+服务器已正确配置SSL证书，且已打开TLS1.1和TLS1.2，但是在Android4.4及以下无法访问网络。是因为在Android4.4及以下版本默认不支持TLS1.2，需要开启对TLS1.2的支持。代码如下：
+
+```java
+public static void enableTls12ForHttpsURLConnection() {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+        SSLSocketFactory ssl = getEnableTls12SSLSocketFactory();
+        if (ssl != null) {
+            HttpsURLConnection.setDefaultSSLSocketFactory(ssl);
+        }
+    }
+}
+
+public static void enableTls12ForOkHttp(OkHttpClient.Builder builder) {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+        SSLSocketFactory ssl = HttpsCompat.getEnableTls12SSLSocketFactory();
+        if (ssl != null) {
+            builder.sslSocketFactory(ssl);
+        }
+    }
+}
+
+public static SSLSocketFactory getEnableTls12SSLSocketFactory() {
+    try {
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, null, null);
+        return new Tls12SocketFactory(sslContext.getSocketFactory());
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return null;
+}
+
+private static class Tls12SocketFactory extends SSLSocketFactory {
+    private static final String[] TLS_SUPPORT_VERSION = {"TLSv1.1", "TLSv1.2"};
+
+    private final SSLSocketFactory delegate;
+
+    private Tls12SocketFactory(SSLSocketFactory base) {
+        this.delegate = base;
     }
 
-    public interface Code{
-        // 定义服务器返回的各种成功失败的状态码
+    @Override
+    public String[] getDefaultCipherSuites() {
+        return delegate.getDefaultCipherSuites();
     }
 
-    public interface Config {
-        // 定义请求的各种配置信息，如BASE_URL/TIMEOUT等
+    @Override
+    public String[] getSupportedCipherSuites() {
+        return delegate.getSupportedCipherSuites();
     }
 
-    public interface Service {
-        // 定义Retrofit的API声明接口
+    @Override
+    public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+        return patch(delegate.createSocket(s, host, port, autoClose));
+    }
+
+    @Override
+    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+        return patch(delegate.createSocket(host, port));
+    }
+
+    @Override
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException, UnknownHostException {
+        return patch(delegate.createSocket(host, port, localHost, localPort));
+    }
+
+    @Override
+    public Socket createSocket(InetAddress host, int port) throws IOException {
+        return patch(delegate.createSocket(host, port));
+    }
+
+    @Override
+    public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
+        return patch(delegate.createSocket(address, port, localAddress, localPort));
+    }
+
+    private Socket patch(Socket s) {
+        if (s instanceof SSLSocket) {
+            ((SSLSocket) s).setEnabledProtocols(TLS_SUPPORT_VERSION);
+        }
+        return s;
     }
 }
 ```
 
-- #### Header内部类
+### Glide在Android4.4及以下图片加载失败
 
-  - ##### BASE_URL_REDIRECT
+原因同上，需要自定义Glide的AppGlideModule，传入支持TLS1.2的OkHttpClient。
 
-    用于BaseUrl的重定向
+```java
+@GlideModule
+public class CustomAppGlideModule extends AppGlideModule {
 
-  - ##### CACHE_ALIVE_SECOND
+    @Override
+    public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
+        registry.replace(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory(getOkHttpClient()));
+    }
 
-    指定一个int值用于设置缓存有效时长（秒）。配置后，在无网时强制使用缓存数据，有网时，如果小于等于0则强制联网获取，大于0则在该时长内使用缓存，过期后联网获取。
+    @Override
+    public boolean isManifestParsingEnabled() {
+        return false;
+    }
 
-- #### api(Class< T>)静态方法
-
-  创建Api接口实例
-
-### RxRequest
-
-用于发起请求
-
-- #### create(Observable< R>)
-
-  创建实例，传入参数为一个可观察对象，应该为Api接口返回
-
-- #### listener(RequestListener)
-
-  监听请求的生命周期
-
-  - ##### onStart()
-
-    请求开始
-
-  - ##### onError(ExceptionHandle)
-
-    请求出错，请见ExceptionHandle
-
-  - ##### onFinish()
-
-    请求结束
-
-- #### request(ResultCallback< E>)
-
-  请求成功
-
-  - ##### onSuccess(int, E)
-
-    服务器返回成功code
-
-  - ##### onFailed(int, String)
-
-    服务器返回失败code
-
-### JsonFieldUtils
-
-创建Json结构的数据
-
-### ParameterUtils
-
-构建Map<String, RequestBody>
+    private static OkHttpClient getOkHttpClient() {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        HttpsCompat.enableTls12ForOkHttp(builder);
+        return builder.build();
+    }
+}
+```
 
 
 
