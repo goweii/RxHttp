@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -105,6 +106,9 @@ class RequestClientManager extends BaseClientManager {
             return mRetrofit;
         }
         retrofit = create(baseUrl);
+        if (mRetrofitMap == null) {
+            mRetrofitMap = new HashMap<>(1);
+        }
         mRetrofitMap.put(clazz, retrofit);
         return retrofit;
     }
