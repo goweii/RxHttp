@@ -16,21 +16,21 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class RxNotify {
 
-    public static void runOnUiThread(@NonNull Action action){
+    public static void runOnUiThread(@NonNull final Action action){
         Observable.empty()
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Object>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
+                    public void onSubscribe(@NonNull Disposable d) {
                     }
 
                     @Override
-                    public void onNext(Object o) {
+                    public void onNext(@NonNull Object o) {
                     }
 
                     @Override
-                    public void onError(Throwable e) {
+                    public void onError(@NonNull Throwable e) {
                     }
 
                     @Override

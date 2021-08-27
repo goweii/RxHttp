@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.request;
 
+import android.support.annotation.NonNull;
+
 import per.goweii.rxhttp.request.setting.RequestSetting;
 
 /**
@@ -32,6 +34,7 @@ public class Api {
      * @param <T>   ServiceInterface的名字
      * @return 接口实例
      */
+    @NonNull
     protected static <T> T api(Class<T> clazz) {
         return RequestClientManager.getService(clazz);
     }

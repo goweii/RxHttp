@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.core;
 
+import android.support.annotation.NonNull;
+
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
@@ -17,6 +19,7 @@ public class RxLife {
         mCompositeDisposable = new CompositeDisposable();
     }
 
+    @NonNull
     public static RxLife create() {
         return new RxLife();
     }

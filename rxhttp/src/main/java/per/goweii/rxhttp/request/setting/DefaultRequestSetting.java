@@ -120,7 +120,7 @@ public abstract class DefaultRequestSetting implements RequestSetting {
     }
 
     @Override
-    public void setOkHttpClient(OkHttpClient.Builder builder) {
+    public void setOkHttpClient(@NonNull OkHttpClient.Builder builder) {
     }
 
     @Nullable

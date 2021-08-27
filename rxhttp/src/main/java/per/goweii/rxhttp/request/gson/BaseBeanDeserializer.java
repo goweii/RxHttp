@@ -1,5 +1,8 @@
 package per.goweii.rxhttp.request.gson;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -19,14 +22,15 @@ import per.goweii.rxhttp.request.base.BaseBean;
  * @date 2019/5/10
  */
 public class BaseBeanDeserializer implements JsonDeserializer<BaseBean> {
+    @Nullable
     @Override
-    public BaseBean deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public BaseBean deserialize(@NonNull JsonElement json, @NonNull Type typeOfT, @NonNull JsonDeserializationContext context) throws JsonParseException {
         if (!json.isJsonObject()) {
             return null;
         }
         JsonObject jsonObj = json.getAsJsonObject();
         try {
-            Class clazz = (Class) typeOfT;
+            Class<?> clazz = (Class<?>) typeOfT;
             BaseBean baseBean = (BaseBean) clazz.newInstance();
             for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {
                 String itemKey = entry.getKey();

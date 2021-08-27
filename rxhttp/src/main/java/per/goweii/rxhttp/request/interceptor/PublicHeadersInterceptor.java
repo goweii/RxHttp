@@ -30,7 +30,7 @@ public class PublicHeadersInterceptor implements Interceptor {
     }
 
     @Override
-    public Response intercept(Chain chain) throws IOException {
+    public Response intercept(@NonNull Chain chain) throws IOException {
         Request request = chain.request();
         Request.Builder builder = request.newBuilder();
         Map<String, String> staticParameters = RxHttp.getRequestSetting().getStaticHeaderParameter();

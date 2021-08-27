@@ -1,5 +1,6 @@
 package per.goweii.rxhttp.download;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -46,29 +47,34 @@ public class RxDownload {
     private Disposable mDisposableDownload = null;
     private Disposable mDisposableSpeed = null;
 
-    private RxDownload(DownloadInfo info) {
+    private RxDownload(@NonNull DownloadInfo info) {
         mInfo = info;
     }
 
+    @NonNull
     public static RxDownload create(@NonNull DownloadInfo info) {
         return new RxDownload(info);
     }
 
+    @NonNull
     public RxDownload setDownloadListener(@NonNull DownloadListener listener) {
         mDownloadListener = listener;
         return this;
     }
 
+    @NonNull
     public RxDownload setProgressListener(@NonNull ProgressListener listener) {
         mProgressListener = listener;
         return this;
     }
 
+    @NonNull
     public RxDownload setSpeedListener(@NonNull SpeedListener listener) {
         mSpeedListener = listener;
         return this;
     }
 
+    @NonNull
     public DownloadInfo getDownloadInfo() {
         return mInfo;
     }
@@ -79,14 +85,14 @@ public class RxDownload {
         }
         Observable.create(new ObservableOnSubscribe<String>() {
             @Override
-            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+            public void subscribe(@NonNull ObservableEmitter<String> emitter) throws Exception {
                 DownloadInfoChecker.checkDownloadLength(mInfo);
                 DownloadInfoChecker.checkContentLength(mInfo);
                 emitter.onNext("bytes=" + mInfo.downloadLength + "-" + (mInfo.contentLength == 0 ? "" : mInfo.contentLength));
             }
         }).subscribeOn(Schedulers.io()).observeOn(Schedulers.io()).flatMap(new Function<String, ObservableSource<ResponseBody>>() {
             @Override
-            public ObservableSource<ResponseBody> apply(String range) throws Exception {
+            public ObservableSource<ResponseBody> apply(@NonNull String range) throws Exception {
                 return DownloadClientManager.getService().download(range, mInfo.url);
             }
         }).doOnNext(new Consumer<ResponseBody>() {
@@ -99,11 +105,30 @@ public class RxDownload {
                 }
                 DownloadInfoChecker.checkDirPath(mInfo);
                 if (TextUtils.isEmpty(mInfo.saveFileName)) {
-                    Class clazz = responseBody.getClass();
-                    Field field = clazz.getDeclaredField("delegate");
-                    field.setAccessible(true);
-                    DownloadResponseBody body = (DownloadResponseBody) field.get(responseBody);
-                    mInfo.saveFileName = body.getRealName();
+                    try {
+                        Class<?> clazz = responseBody.getClass();
+                        Field field = clazz.getDeclaredField("delegate");
+                        field.setAccessible(true);
+                        DownloadResponseBody body = (DownloadResponseBody) field.get(responseBody);
+                        mInfo.saveFileName = body.getRealName();
+                    } catch (Throwable ignore) {
+                    }
+                }
+                if (TextUtils.isEmpty(mInfo.saveFileName)) {
+                    try {
+                        String filename = null;
+                        Uri uri = Uri.parse(mInfo.url);
+                        for (String name : uri.getQueryParameterNames()) {
+                            if (name.contains("name")) {
+                                filename = uri.getQueryParameter(name);
+                            }
+                        }
+                        if (TextUtils.isEmpty(filename)) {
+                            filename = uri.getLastPathSegment();
+                        }
+                        mInfo.saveFileName = filename;
+                    } catch (Throwable ignore) {
+                    }
                 }
                 DownloadInfoChecker.checkFileName(mInfo);
                 mInfo.state = DownloadInfo.State.DOWNLOADING;
@@ -117,7 +142,7 @@ public class RxDownload {
             }
         }).subscribe(new Observer<ResponseBody>() {
             @Override
-            public void onSubscribe(Disposable d) {
+            public void onSubscribe(@NonNull Disposable d) {
                 mDisposableDownload = d;
                 mInfo.state = DownloadInfo.State.STARTING;
                 if (mDownloadListener != null) {
@@ -126,7 +151,7 @@ public class RxDownload {
             }
 
             @Override
-            public void onNext(ResponseBody responseBody) {
+            public void onNext(@NonNull ResponseBody responseBody) {
                 mInfo.state = DownloadInfo.State.COMPLETION;
                 if (mDownloadListener != null) {
                     mDownloadListener.onCompletion(mInfo);
@@ -134,7 +159,7 @@ public class RxDownload {
             }
 
             @Override
-            public void onError(Throwable e) {
+            public void onError(@NonNull Throwable e) {
                 if (e instanceof RangeLengthIsZeroException) {
                     mInfo.state = DownloadInfo.State.COMPLETION;
                     if (mDownloadListener != null) {
@@ -262,7 +287,7 @@ public class RxDownload {
                     private long lastDownloadLength = 0;
 
                     @Override
-                    public Float apply(Long ms) throws Exception {
+                    public Float apply(@NonNull Long ms) throws Exception {
                         float bytesPerSecond = UnitFormatUtils.calculateSpeed(mInfo.downloadLength - lastDownloadLength, 1);
                         lastDownloadLength = mInfo.downloadLength;
                         return bytesPerSecond;

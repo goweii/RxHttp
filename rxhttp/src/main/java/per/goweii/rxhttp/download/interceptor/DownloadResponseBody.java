@@ -1,5 +1,8 @@
 package per.goweii.rxhttp.download.interceptor;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -26,14 +29,16 @@ public class DownloadResponseBody extends ResponseBody {
         this.responseBody = responseBody;
     }
 
+    @Nullable
     public String getRealName() {
         return realName;
     }
 
-    public void setRealName(String realName) {
+    public void setRealName(@Nullable String realName) {
         this.realName = realName;
     }
 
+    @Nullable
     @Override
     public MediaType contentType() {
         return responseBody.contentType();
@@ -44,6 +49,7 @@ public class DownloadResponseBody extends ResponseBody {
         return responseBody.contentLength();
     }
 
+    @NonNull
     @Override
     public BufferedSource source() {
         if (source == null) {
@@ -57,7 +63,6 @@ public class DownloadResponseBody extends ResponseBody {
      */
     private Source source(Source source) {
         return new ForwardingSource(source) {
-
             @Override
             public long read(Buffer sink, long byteCount) throws IOException {
                 return super.read(sink, byteCount);

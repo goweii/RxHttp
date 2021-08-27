@@ -21,7 +21,7 @@ import per.goweii.rxhttp.request.utils.NonNullUtils;
 public class BaseCacheControlInterceptor implements Interceptor {
 
     @Override
-    public Response intercept(Chain chain) throws IOException {
+    public Response intercept(@NonNull Chain chain) throws IOException {
         Request request = chain.request();
         if (!TextUtils.equals(request.method(), "GET")) {
             return chain.proceed(request);
@@ -37,16 +37,19 @@ public class BaseCacheControlInterceptor implements Interceptor {
     }
 
     @NonNull
-    protected Request getCacheRequest(Request request, int age){
+    protected Request getCacheRequest(@NonNull Request request, int age){
         return request;
     }
 
     @NonNull
-    protected Response getCacheResponse(Response response, int age){
+    protected Response getCacheResponse(@NonNull Response response, int age){
         return response;
     }
 
     private int getCacheControlAge(String age) {
+        if (!TextUtils.isEmpty(age)) {
+            return 0;
+        }
         try {
             return Integer.parseInt(age);
         } catch (NumberFormatException ignore) {

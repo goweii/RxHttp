@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.request;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -48,6 +50,7 @@ class RequestClientManager extends BaseClientManager {
      *
      * @return RequestClientManager
      */
+    @NonNull
     private static RequestClientManager getInstance() {
         if (INSTANCE == null) {
             synchronized (RequestClientManager.class) {
@@ -66,11 +69,13 @@ class RequestClientManager extends BaseClientManager {
      * @param <T>   Api接口
      * @return Api接口实例
      */
-    static <T> T getService(Class<T> clazz) {
+    @NonNull
+    static <T> T getService(@NonNull Class<T> clazz) {
         return getInstance().getRetrofit(clazz).create(clazz);
     }
 
-    private Retrofit getRetrofit(Class<?> clazz) {
+    @NonNull
+    private Retrofit getRetrofit(@Nullable Class<?> clazz) {
         if (clazz == null) {
             return mRetrofit;
         }
@@ -117,6 +122,7 @@ class RequestClientManager extends BaseClientManager {
      * 创建Retrofit实例
      */
     @Override
+    @NonNull
     protected Retrofit create() {
         return create(RxHttp.getRequestSetting().getBaseUrl());
     }
@@ -124,7 +130,8 @@ class RequestClientManager extends BaseClientManager {
     /**
      * 创建Retrofit实例
      */
-    private Retrofit create(String baseUrl) {
+    @NonNull
+    private Retrofit create(@NonNull String baseUrl) {
         Retrofit.Builder builder = new Retrofit.Builder()
                 .client(createOkHttpClient())
                 .baseUrl(BaseUrlUtils.checkBaseUrl(baseUrl));
@@ -142,6 +149,7 @@ class RequestClientManager extends BaseClientManager {
      *
      * @return OkHttpClient
      */
+    @NonNull
     private OkHttpClient createOkHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         // 设置调试模式打印日志
@@ -188,9 +196,11 @@ class RequestClientManager extends BaseClientManager {
      *
      * @return Cache
      */
+    @NonNull
     private Cache createCache() {
         File cacheFile = new File(SDCardUtils.getCacheDir(), RxHttp.getRequestSetting().getCacheDirName());
         if (!cacheFile.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             cacheFile.mkdirs();
         }
         return new Cache(cacheFile, RxHttp.getRequestSetting().getCacheSize());

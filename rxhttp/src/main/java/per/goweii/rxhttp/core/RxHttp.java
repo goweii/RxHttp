@@ -30,7 +30,7 @@ public class RxHttp {
     private RequestSetting mRequestSetting = null;
     private DownloadSetting mDownloadSetting = null;
 
-    private RxHttp(Context context) {
+    private RxHttp(@NonNull Context context) {
         mAppContext = context;
     }
 
@@ -38,6 +38,7 @@ public class RxHttp {
         INSTANCE = new RxHttp(context.getApplicationContext());
     }
 
+    @NonNull
     public static RxHttp getInstance() {
         if (INSTANCE == null) {
             throw new RxHttpUninitializedException();

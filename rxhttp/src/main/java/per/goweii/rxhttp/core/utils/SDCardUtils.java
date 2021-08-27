@@ -1,6 +1,7 @@
 package per.goweii.rxhttp.core.utils;
 
 import android.os.Environment;
+import android.support.annotation.NonNull;
 
 import java.io.File;
 
@@ -12,6 +13,7 @@ import per.goweii.rxhttp.core.RxHttp;
  */
 public class SDCardUtils {
 
+    @NonNull
     public static String getCacheDir() {
         File cacheFile = null;
         if (isSDCardAlive()) {
@@ -23,6 +25,7 @@ public class SDCardUtils {
         return cacheFile.getAbsolutePath();
     }
 
+    @NonNull
     public static String getDownloadCacheDir() {
         File dir = null;
         if (isSDCardAlive()) {

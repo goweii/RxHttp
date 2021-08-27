@@ -128,7 +128,7 @@ public interface RequestSetting {
     /**
      * 在创建OkHttpClient之前调用，及框架完成所有配置后
      */
-    void setOkHttpClient(OkHttpClient.Builder builder);
+    void setOkHttpClient(@NonNull OkHttpClient.Builder builder);
 
     /**
      * 在创建OkHttpClient之前调用，及框架完成所有配置后

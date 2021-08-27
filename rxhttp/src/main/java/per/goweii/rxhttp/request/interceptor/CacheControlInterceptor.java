@@ -27,7 +27,7 @@ public class CacheControlInterceptor extends BaseCacheControlInterceptor {
 
     @NonNull
     @Override
-    protected Request getCacheRequest(Request request, int age) {
+    protected Request getCacheRequest(@io.reactivex.annotations.NonNull Request request, int age) {
         if (NetUtils.isConnected()) {
             if (age <= 0) {
                 return request.newBuilder()

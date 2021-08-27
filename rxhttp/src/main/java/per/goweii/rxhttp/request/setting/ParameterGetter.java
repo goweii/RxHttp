@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.request.setting;
 
+import android.support.annotation.NonNull;
+
 /**
  * 描述：
  *
@@ -7,5 +9,6 @@ package per.goweii.rxhttp.request.setting;
  * @date 2018/10/15
  */
 public interface ParameterGetter {
+    @NonNull
     String get();
 }

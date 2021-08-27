@@ -11,11 +11,11 @@ import java.util.Map;
  */
 public class NonNullUtils {
 
-    public static boolean check(Map... maps) {
+    public static boolean check(Map<?, ?>... maps) {
         if (maps == null || maps.length == 0) {
             return false;
         }
-        for (Map map : maps) {
+        for (Map<?, ?> map : maps) {
             if (check(map)) {
                 return true;
             }
@@ -23,11 +23,11 @@ public class NonNullUtils {
         return false;
     }
 
-    public static boolean check(Collection... collections) {
+    public static boolean check(Collection<?>... collections) {
         if (collections == null || collections.length == 0) {
             return false;
         }
-        for (Collection collection : collections) {
+        for (Collection<?> collection : collections) {
             if (check(collection)) {
                 return true;
             }
@@ -46,11 +46,11 @@ public class NonNullUtils {
         return false;
     }
 
-    public static boolean check(Map map) {
+    public static boolean check(Map<?, ?> map) {
         return map != null && !map.isEmpty();
     }
 
-    public static boolean check(Collection collection) {
+    public static boolean check(Collection<?> collection) {
         return collection != null && !collection.isEmpty();
     }
 
@@ -58,16 +58,17 @@ public class NonNullUtils {
         if (o == null) {
             return false;
         }
-        if (o instanceof Object[]){
+        if (o instanceof Object[]) {
             Object[] objects = (Object[]) o;
             return check(objects);
-        }if (o instanceof Collection) {
-            Collection collection = (Collection) o;
+        }
+        if (o instanceof Collection) {
+            Collection<?> collection = (Collection<?>) o;
             return check(collection);
-        } else if (o instanceof Map){
-            Map map = (Map) o;
+        } else if (o instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) o;
             return check(map);
-        }else {
+        } else {
             return true;
         }
     }

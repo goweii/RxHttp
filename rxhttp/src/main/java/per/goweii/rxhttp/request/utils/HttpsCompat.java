@@ -1,6 +1,9 @@
 package per.goweii.rxhttp.request.utils;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -60,12 +63,12 @@ import okhttp3.OkHttpClient;
  */
 public class HttpsCompat {
 
-    public static void ignoreSSLForOkHttp(OkHttpClient.Builder builder) {
+    public static void ignoreSSLForOkHttp(@NonNull OkHttpClient.Builder builder) {
         builder.hostnameVerifier(getIgnoreHostnameVerifier())
                 .sslSocketFactory(getIgnoreSSLSocketFactory());
     }
 
-    public static void enableTls12ForOkHttp(OkHttpClient.Builder builder) {
+    public static void enableTls12ForOkHttp(@NonNull OkHttpClient.Builder builder) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
             SSLSocketFactory ssl = getEnableTls12SSLSocketFactory();
             if (ssl != null) {
@@ -92,6 +95,7 @@ public class HttpsCompat {
      * 获取开启TLS1.2的SSLSocketFactory
      * 建议在android4.4及以下版本调用
      */
+    @Nullable
     public static SSLSocketFactory getEnableTls12SSLSocketFactory() {
         try {
             SSLContext sslContext = SSLContext.getInstance("TLS");
@@ -107,8 +111,10 @@ public class HttpsCompat {
      * 获取忽略证书的HostnameVerifier
      * 与{@link #getIgnoreSSLSocketFactory()}同时配置使用
      */
+    @NonNull
     public static HostnameVerifier getIgnoreHostnameVerifier() {
         return new HostnameVerifier() {
+            @SuppressLint("BadHostnameVerifier")
             @Override
             public boolean verify(String s, SSLSession sslSession) {
                 return true;
@@ -120,6 +126,7 @@ public class HttpsCompat {
      * 获取忽略证书的SSLSocketFactory
      * 与{@link #getIgnoreHostnameVerifier()}同时配置使用
      */
+    @NonNull
     public static SSLSocketFactory getIgnoreSSLSocketFactory() {
         try {
             SSLContext sslContext = SSLContext.getInstance("SSL");
@@ -133,10 +140,12 @@ public class HttpsCompat {
     private static TrustManager[] getTrustManager() {
         return new TrustManager[]{
                 new X509TrustManager() {
+                    @SuppressLint("TrustAllX509TrustManager")
                     @Override
                     public void checkClientTrusted(X509Certificate[] chain, String authType) {
                     }
 
+                    @SuppressLint("TrustAllX509TrustManager")
                     @Override
                     public void checkServerTrusted(X509Certificate[] chain, String authType) {
                     }

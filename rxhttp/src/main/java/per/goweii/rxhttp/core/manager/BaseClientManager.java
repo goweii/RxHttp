@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.core.manager;
 
+import android.support.annotation.NonNull;
+
 import retrofit2.Retrofit;
 
 /**
@@ -10,5 +12,6 @@ import retrofit2.Retrofit;
  * @date 2018/9/4
  */
 public abstract class BaseClientManager {
+    @NonNull
     protected abstract Retrofit create();
 }

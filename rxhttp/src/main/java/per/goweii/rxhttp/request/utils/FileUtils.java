@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.request.utils;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
@@ -14,7 +16,8 @@ import java.util.Locale;
  */
 class FileUtils {
 
-    private static String getSuffix(File file) {
+    @NonNull
+    private static String getSuffix(@Nullable File file) {
         if (file == null || !file.exists() || file.isDirectory()) {
             return "";
         }
@@ -29,7 +32,8 @@ class FileUtils {
         return fileName.substring(index + 1).toLowerCase(Locale.US);
     }
 
-    static String getMimeType(File file){
+    @Nullable
+    static String getMimeType(@Nullable File file){
         String suffix = getSuffix(file);
         String mimeType = null;
         if (!TextUtils.isEmpty(suffix)) {

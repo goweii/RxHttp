@@ -21,16 +21,17 @@ public class RequestBodyUtils {
     private RequestBodyUtils() {
     }
 
+    @NonNull
     public static RequestBodyUtils.Builder builder() {
         return new RequestBodyUtils.Builder();
     }
 
-    public static <T> Map<String, RequestBody> create(String key, T value) {
+    @NonNull
+    public static <T> Map<String, RequestBody> create(@NonNull String key, @NonNull T value) {
         return builder().add(key, value).build();
     }
 
     public static class Builder {
-
         private final Map<String, RequestBody> mParams;
 
         private Builder() {
@@ -41,7 +42,8 @@ public class RequestBodyUtils {
          * 添加参数
          * 根据传进来的对象来判断是String还是File类型的参数
          */
-        public <T> Builder add(String key, T value) {
+        @NonNull
+        public <T> Builder add(@NonNull String key, @NonNull T value) {
             if (value instanceof String) {
                 addString(key, (String) value);
             } else if (value instanceof File) {
@@ -53,10 +55,8 @@ public class RequestBodyUtils {
         /**
          * 添加参数String
          */
-        public Builder addString(@NonNull String key, String value) {
-            if (value == null) {
-                return this;
-            }
+        @NonNull
+        public Builder addString(@NonNull String key, @NonNull String value) {
             RequestBody body = RequestBody.create(MediaType.parse("text/plain"), value);
             mParams.put(key, body);
             return this;
@@ -65,10 +65,8 @@ public class RequestBodyUtils {
         /**
          * 添加参数File
          */
-        public Builder addFile(@NonNull String key, File value) {
-            if (value == null) {
-                return this;
-            }
+        @NonNull
+        public Builder addFile(@NonNull String key, @NonNull File value) {
             if (!value.exists()) {
                 return this;
             }
@@ -82,23 +80,24 @@ public class RequestBodyUtils {
         /**
          * 添加参数File
          */
-        public Builder addFile(String key, String filePath) {
-            if (filePath == null) {
-                return this;
-            }
+        @NonNull
+        public Builder addFile(@NonNull String key, @NonNull String filePath) {
             return addFile(key, new File(filePath));
         }
 
-        public Builder addFile(String key, Uri uri) {
-            if (uri == null) {
+        @NonNull
+        public Builder addFile(@NonNull String key, @NonNull Uri uri) {
+            String path = uri.getPath();
+            if (path == null || path.isEmpty()) {
                 return this;
             }
-            return addFile(key, uri.getPath());
+            return addFile(key, path);
         }
 
         /**
          * 构建RequestBody
          */
+        @NonNull
         public Map<String, RequestBody> build() {
             return mParams;
         }

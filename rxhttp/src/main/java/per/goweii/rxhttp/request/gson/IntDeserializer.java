@@ -1,5 +1,8 @@
 package per.goweii.rxhttp.request.gson;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -14,24 +17,25 @@ import java.lang.reflect.Type;
  * @date 2019/5/10
  */
 public class IntDeserializer implements JsonDeserializer<Integer> {
+    @Nullable
     @Override
-    public Integer deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public Integer deserialize(@NonNull JsonElement json, @NonNull Type typeOfT, @NonNull JsonDeserializationContext context) throws JsonParseException {
         if (!json.isJsonObject()) {
             return 0;
         }
         try {
             return json.getAsInt();
-        } catch (Exception e){
+        } catch (Exception ignore){
         }
         try {
             double d = json.getAsDouble();
             return (int) d;
-        } catch (Exception e){
+        } catch (Exception ignore){
         }
         try {
             String s = json.getAsString();
             return Integer.valueOf(s);
-        } catch (Exception e){
+        } catch (Exception ignore){
         }
         return 0;
     }

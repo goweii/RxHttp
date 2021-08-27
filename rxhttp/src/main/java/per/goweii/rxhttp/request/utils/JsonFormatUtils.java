@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.request.utils;
 
+import android.support.annotation.NonNull;
+
 /**
  * 描述：
  *
@@ -10,6 +12,7 @@ public class JsonFormatUtils {
     /**
      * 对json字符串格式化输出
      */
+    @NonNull
     public static String format(String jsonStr) {
         if (null == jsonStr || "".equals(jsonStr)) {
             return "";
@@ -54,7 +57,7 @@ public class JsonFormatUtils {
     /**
      * 添加space
      */
-    private static void addIndentBlank(StringBuilder sb, int indent) {
+    private static void addIndentBlank(@NonNull StringBuilder sb, int indent) {
         for (int i = 0; i < indent; i++) {
             sb.append('\t');
         }

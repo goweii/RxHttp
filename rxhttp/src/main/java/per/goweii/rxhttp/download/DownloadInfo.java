@@ -40,16 +40,19 @@ public class DownloadInfo {
         this.mode = RxHttp.getDownloadSetting().getDefaultDownloadMode();
     }
 
+    @NonNull
     public static DownloadInfo create(@NonNull String url){
         return create(url, null, null);
     }
 
+    @NonNull
     public static DownloadInfo create(@NonNull String url,
                                       @Nullable String saveDirPath,
                                       @Nullable String saveFileName){
         return create(url, saveDirPath, saveFileName, 0, 0);
     }
 
+    @NonNull
     public static DownloadInfo create(@NonNull String url,
                                       @Nullable String saveDirPath,
                                       @Nullable String saveFileName,

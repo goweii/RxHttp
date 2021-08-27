@@ -1,5 +1,8 @@
 package per.goweii.rxhttp.request.gson;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -19,8 +22,9 @@ import java.util.List;
  */
 public class ListDeserializer implements JsonDeserializer<List<?>> {
 
+    @Nullable
     @Override
-    public List<?> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public List<?> deserialize(@NonNull JsonElement json, @NonNull Type typeOfT, @NonNull JsonDeserializationContext context) throws JsonParseException {
         if (!json.isJsonArray()) {
             return null;
         }

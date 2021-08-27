@@ -34,7 +34,7 @@ public class PublicQueryParameterInterceptor implements Interceptor {
     }
 
     @Override
-    public Response intercept(Chain chain) throws IOException {
+    public Response intercept(@NonNull Chain chain) throws IOException {
         Request original = chain.request();
 
         HttpUrl.Builder builder = original.url().newBuilder();

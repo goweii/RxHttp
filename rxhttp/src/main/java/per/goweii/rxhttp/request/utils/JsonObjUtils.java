@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.request.utils;
 
+import android.support.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,11 +19,13 @@ public class JsonObjUtils {
         mJsonObject = new JSONObject();
     }
 
+    @NonNull
     public static JsonObjUtils create() {
         return new JsonObjUtils();
     }
 
-    public JsonObjUtils add(String key, int value) {
+    @NonNull
+    public JsonObjUtils add(@NonNull String key, int value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
@@ -30,7 +34,8 @@ public class JsonObjUtils {
         return this;
     }
 
-    public JsonObjUtils add(String key, float value) {
+    @NonNull
+    public JsonObjUtils add(@NonNull String key, float value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
@@ -39,7 +44,8 @@ public class JsonObjUtils {
         return this;
     }
 
-    public JsonObjUtils add(String key, double value) {
+    @NonNull
+    public JsonObjUtils add(@NonNull String key, double value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
@@ -48,7 +54,8 @@ public class JsonObjUtils {
         return this;
     }
 
-    public JsonObjUtils add(String key, boolean value) {
+    @NonNull
+    public JsonObjUtils add(@NonNull String key, boolean value) {
         try {
             mJsonObject.put(key, value ? 1 : 0);
         } catch (JSONException e) {
@@ -57,7 +64,8 @@ public class JsonObjUtils {
         return this;
     }
 
-    public JsonObjUtils add(String key, String value) {
+    @NonNull
+    public JsonObjUtils add(@NonNull String key, String value) {
         try {
             mJsonObject.put(key, value);
         } catch (JSONException e) {
@@ -66,10 +74,12 @@ public class JsonObjUtils {
         return this;
     }
 
+    @NonNull
     public JSONObject get() {
         return mJsonObject;
     }
 
+    @NonNull
     public String toJson() {
         return mJsonObject.toString();
     }

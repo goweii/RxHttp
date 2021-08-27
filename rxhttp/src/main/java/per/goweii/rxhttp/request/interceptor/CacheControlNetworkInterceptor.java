@@ -26,7 +26,7 @@ public class CacheControlNetworkInterceptor extends BaseCacheControlInterceptor 
 
     @NonNull
     @Override
-    protected Request getCacheRequest(Request request, int age) {
+    protected Request getCacheRequest(@io.reactivex.annotations.NonNull Request request, int age) {
         return request.newBuilder()
                 .removeHeader(Api.Header.CACHE_ALIVE_SECOND)
                 .build();
@@ -34,7 +34,7 @@ public class CacheControlNetworkInterceptor extends BaseCacheControlInterceptor 
 
     @NonNull
     @Override
-    protected Response getCacheResponse(Response response, int age) {
+    protected Response getCacheResponse(@io.reactivex.annotations.NonNull Response response, int age) {
         if (NetUtils.isConnected()) {
             if (age <= 0) {
                 return response.newBuilder()

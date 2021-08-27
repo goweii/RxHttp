@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.request.exception;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.JsonParseException;
 
 import org.json.JSONException;
@@ -31,7 +33,7 @@ public class ExceptionHandle {
     private int code;
     private String msg;
 
-    public final void handle(Throwable e) {
+    public final void handle(@NonNull Throwable e) {
         this.e = e;
         this.code = onGetCode(e);
         this.msg = onGetMsg(code);
@@ -43,7 +45,7 @@ public class ExceptionHandle {
      * @param e Throwable
      * @return 错误码
      */
-    protected int onGetCode(Throwable e) {
+    protected int onGetCode(@NonNull Throwable e) {
         if (!NetUtils.isConnected()) {
             return Code.NET;
         } else {
@@ -69,6 +71,7 @@ public class ExceptionHandle {
      * @param code 错误码
      * @return 错误信息
      */
+    @NonNull
     protected String onGetMsg(int code) {
         String msg;
         switch (code) {

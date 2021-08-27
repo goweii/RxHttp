@@ -1,6 +1,7 @@
 package per.goweii.rxhttp.request;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -21,7 +22,6 @@ import per.goweii.rxhttp.request.exception.ExceptionHandle;
  * @date 2018/9/9
  */
 public class RxRequest<T, R extends BaseResponse<T>> {
-
     private final Observable<R> mObservable;
     private ResultCallback<T> mCallback = null;
     private RequestListener mListener = null;
@@ -31,6 +31,7 @@ public class RxRequest<T, R extends BaseResponse<T>> {
         mObservable = observable.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
+    @NonNull
     public static <T, R extends BaseResponse<T>> RxRequest<T, R> create(@NonNull Observable<R> observable) {
         return new RxRequest<>(observable);
     }
@@ -38,7 +39,8 @@ public class RxRequest<T, R extends BaseResponse<T>> {
     /**
      * 添加请求生命周期的监听
      */
-    public RxRequest<T, R> listener(RequestListener listener) {
+    @NonNull
+    public RxRequest<T, R> listener(@Nullable RequestListener listener) {
         mListener = listener;
         return this;
     }
@@ -48,7 +50,8 @@ public class RxRequest<T, R extends BaseResponse<T>> {
      *
      * @param rxLife 详见{@link RxLife}
      */
-    public RxRequest<T, R> autoLife(RxLife rxLife) {
+    @NonNull
+    public RxRequest<T, R> autoLife(@Nullable RxLife rxLife) {
         mRxLife = rxLife;
         return this;
     }
@@ -59,6 +62,7 @@ public class RxRequest<T, R extends BaseResponse<T>> {
      * @return Disposable 用于中断请求，管理请求生命周期
      * 详见{@link RxLife}
      */
+    @NonNull
     public Disposable request(@NonNull ResultCallback<T> callback) {
         mCallback = callback;
         Disposable disposable = mObservable.subscribe(new Consumer<BaseResponse<T>>() {
@@ -129,13 +133,13 @@ public class RxRequest<T, R extends BaseResponse<T>> {
     public interface ResultCallback<E> {
         void onSuccess(int code, E data);
 
-        void onFailed(int code, String msg);
+        void onFailed(int code, @Nullable String msg);
     }
 
     public interface RequestListener {
         void onStart();
 
-        void onError(ExceptionHandle handle);
+        void onError(@NonNull ExceptionHandle handle);
 
         void onFinish();
     }

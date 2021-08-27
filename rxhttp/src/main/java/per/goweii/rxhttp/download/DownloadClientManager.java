@@ -1,5 +1,7 @@
 package per.goweii.rxhttp.download;
 
+import android.support.annotation.NonNull;
+
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -30,6 +32,7 @@ class DownloadClientManager extends BaseClientManager {
      *
      * @return RequestClientManager
      */
+    @NonNull
     private static DownloadClientManager getInstance() {
         if (INSTANCE == null) {
             synchronized (DownloadClientManager.class) {
@@ -45,6 +48,7 @@ class DownloadClientManager extends BaseClientManager {
         return getInstance().mRetrofit.create(DownloadApi.class);
     }
 
+    @NonNull
     @Override
     protected Retrofit create() {
         return new Retrofit.Builder()
@@ -54,6 +58,7 @@ class DownloadClientManager extends BaseClientManager {
                 .build();
     }
 
+    @NonNull
     private OkHttpClient createOkHttpClient(){
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         long timeout = RxHttp.getDownloadSetting().getTimeout();

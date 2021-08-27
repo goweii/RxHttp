@@ -72,6 +72,7 @@ public class TestRequestActivity extends AppCompatActivity {
             public Map<String, ParameterGetter> getDynamicPublicQueryParameter() {
                 Map<String, ParameterGetter> parameters = new HashMap<>(2);
                 parameters.put("user_id", new ParameterGetter() {
+                    @io.reactivex.annotations.NonNull
                     @Override
                     public String get() {
                         return "100001";
@@ -81,7 +82,7 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void setOkHttpClient(OkHttpClient.Builder builder) {
+            public void setOkHttpClient(@io.reactivex.annotations.NonNull OkHttpClient.Builder builder) {
                 builder.hostnameVerifier(new HostnameVerifier() {
                     @Override
                     public boolean verify(String hostname, SSLSession session) {
@@ -144,7 +145,7 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(ExceptionHandle handle) {
+            public void onError(@NonNull ExceptionHandle handle) {
                 log("onError(" + handle.getMsg() + ")");
             }
 
@@ -178,7 +179,7 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(ExceptionHandle handle) {
+            public void onError(@NonNull ExceptionHandle handle) {
                 log("onError(" + handle.getMsg() + ")");
             }
 
@@ -212,7 +213,7 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(ExceptionHandle handle) {
+            public void onError(@NonNull ExceptionHandle handle) {
                 log("onError(" + handle.getMsg() + ")");
             }
 
@@ -246,7 +247,7 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(ExceptionHandle handle) {
+            public void onError(@NonNull ExceptionHandle handle) {
                 log("onError(" + handle.getMsg() + ")");
             }
 
@@ -280,7 +281,7 @@ public class TestRequestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(ExceptionHandle handle) {
+            public void onError(@NonNull ExceptionHandle handle) {
                 log("onError(" + handle.getMsg() + ")");
             }
 

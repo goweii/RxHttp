@@ -37,7 +37,7 @@ public class BaseUrlRedirectInterceptor implements Interceptor {
     }
 
     @Override
-    public Response intercept(Chain chain) throws IOException {
+    public Response intercept(@NonNull Chain chain) throws IOException {
         Request original = chain.request();
         Map<String, String> urls = RxHttp.getRequestSetting().getRedirectBaseUrl();
         if (!NonNullUtils.check(urls)) {

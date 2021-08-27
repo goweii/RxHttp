@@ -25,8 +25,10 @@ public class DownloadInfoChecker {
                 if (info.mode == DownloadInfo.Mode.APPEND) {
                     info.downloadLength = file.length();
                 } else if (info.mode == DownloadInfo.Mode.REPLACE) {
+                    //noinspection ResultOfMethodCallIgnored
                     file.delete();
                 } else {
+                    assert info.saveFileName != null;
                     info.saveFileName = renameFileName(info.saveFileName);
                 }
             }
@@ -43,6 +45,7 @@ public class DownloadInfoChecker {
     }
 
     public static void checkContentLength(DownloadInfo info) throws RangeLengthIsZeroException{
+        //noinspection ConditionCoveredByFurtherCondition
         if (info.downloadLength > 0 && info.contentLength > 0 && info.contentLength <= info.downloadLength) {
             throw new RangeLengthIsZeroException();
         }
@@ -56,7 +59,7 @@ public class DownloadInfoChecker {
         if (index >= 0) {
             nameLeft = fileName.substring(0, index);
             nameDivide = ".";
-            nameRight = fileName.substring(index + 1, fileName.length());
+            nameRight = fileName.substring(index + 1);
         } else {
             nameLeft = fileName;
             nameDivide = "";
